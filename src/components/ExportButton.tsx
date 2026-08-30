@@ -16,7 +16,7 @@ export function ExportButton({ ingestionId }: ExportButtonProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `sentinel-export-${ingestionId}.json`;
+    a.download = `shieldnet-export-${ingestionId}.json`;
     a.click();
     URL.revokeObjectURL(url);
     setState("done");

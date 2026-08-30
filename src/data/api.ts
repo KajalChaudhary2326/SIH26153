@@ -24,7 +24,31 @@ import {
   mockModelRuns,
 } from "./mockData";
 
-const API_BASE = "http://127.0.0.1:8000/api";
+function getApiBase(): string {
+  if (typeof window !== "undefined") {
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryApi = urlParams.get("api");
+    if (queryApi) {
+      const clean = queryApi.replace(/\/$/, "");
+      const finalUrl = clean.endsWith("/api") ? clean : `${clean}/api`;
+      localStorage.setItem("SHIELDNET_API_URL", finalUrl);
+      return finalUrl;
+    }
+    const savedApi = localStorage.getItem("SHIELDNET_API_URL");
+    if (savedApi) {
+      return savedApi;
+    }
+  }
+
+  const envUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+  if (envUrl) {
+    return envUrl.endsWith("/api") ? envUrl : `${envUrl}/api`;
+  }
+
+  return "http://127.0.0.1:8000/api";
+}
+
+const API_BASE = getApiBase();
 
 export interface ScenarioSession {
   id: string;

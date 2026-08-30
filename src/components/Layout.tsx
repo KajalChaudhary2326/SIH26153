@@ -35,7 +35,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <Shield size={16} style={{ color: "var(--color-accent)" }} />
             </div>
             <div>
-              <div className="text-base font-semibold tracking-tight text-[var(--color-text-primary)]">Sentinel</div>
+              <div className="text-base font-semibold tracking-tight text-[var(--color-text-primary)]">SHIELDNET</div>
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">SIH26153 · NTRO</div>
             </div>
           </Link>
@@ -137,7 +137,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="text-base font-semibold text-[var(--color-text-primary)]">Forecasting attacks before they complete.</div>
-              <div className="mt-1 text-sm text-[var(--color-text-secondary)]">Sentinel helps defenders see the next state of the network before compromise.</div>
+              <div className="mt-1 text-sm text-[var(--color-text-secondary)]">SHIELDNET helps defenders see the next state of the network before compromise.</div>
             </div>
             <div className="inline-flex w-fit items-center rounded-full border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-secondary)]" style={{ borderColor: "var(--color-border)" }}>
               SIH26153 · NTRO · Blockchain &amp; Cybersecurity

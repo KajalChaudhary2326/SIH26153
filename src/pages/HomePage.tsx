@@ -54,7 +54,7 @@ export function HomePage() {
           </h1>
 
           <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--color-text-secondary)]">
-            Sentinel reads temporal network behavior, projects the next K windows, and explains
+            SHIELDNET reads temporal network behavior, projects the next K windows, and explains
             why a trajectory is accelerating toward lateral movement, C2, or exfiltration.
           </p>
 
