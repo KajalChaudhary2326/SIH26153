@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChevronDown, ArrowRight, Gauge } from "lucide-react";
+import { Gauge } from "lucide-react";
 
 interface StepProps {
   number: string;
@@ -206,9 +206,9 @@ function Step({ number, title, description, inputLabel, inputItems, visualizatio
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
       transition={{ duration: 0.5, delay: index * 0.12, ease: "easeOut" }}
-      className="flex flex-col"
+      className="flex flex-col h-full"
     >
-      <div className="rounded-2xl border backdrop-blur-sm transition-all duration-300 glow-box overflow-hidden group hover:border-[var(--color-accent)]"
+      <div className="rounded-2xl border backdrop-blur-sm transition-all duration-300 glow-box overflow-hidden group hover:border-[var(--color-accent)] h-full flex flex-col"
         style={{
           borderColor: "var(--color-border)",
           backgroundColor: "color-mix(in srgb, var(--color-panel) 85%, transparent)",
@@ -222,7 +222,7 @@ function Step({ number, title, description, inputLabel, inputItems, visualizatio
           }}
         />
 
-        <div className="relative z-10 p-6">
+        <div className="relative z-10 p-6 flex flex-col h-full">
           {/* Step number */}
           <div className="flex items-center gap-3 mb-4">
             <motion.div
@@ -267,7 +267,7 @@ function Step({ number, title, description, inputLabel, inputItems, visualizatio
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: index * 0.12 + 0.4 }}
-            className="pt-4 border-t"
+            className="pt-4 border-t mt-auto"
             style={{
               borderColor: "color-mix(in srgb, var(--color-border) 50%, transparent)"
             }}
@@ -283,44 +283,6 @@ function Step({ number, title, description, inputLabel, inputItems, visualizatio
           </motion.div>
         </div>
       </div>
-    </motion.div>
-  );
-}
-
-function PipelineArrow({ isHorizontal }: { isHorizontal: boolean }) {
-  if (isHorizontal) {
-    return (
-      <motion.div
-        className="hidden xl:flex items-center justify-center"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.3 }}
-      >
-        <motion.div
-          animate={{ x: [0, 6, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        >
-          <ArrowRight size={24} style={{ color: "var(--color-accent)" }} />
-        </motion.div>
-      </motion.div>
-    );
-  }
-
-  return (
-    <motion.div
-      className="xl:hidden flex justify-center py-2"
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true }}
-      transition={{ delay: 0.3 }}
-    >
-      <motion.div
-        animate={{ y: [0, 4, 0] }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-      >
-        <ChevronDown size={20} style={{ color: "var(--color-accent)" }} />
-      </motion.div>
     </motion.div>
   );
 }
@@ -392,11 +354,10 @@ export function HowItWorksSection() {
       </motion.div>
 
       {/* Steps Grid with Pipeline */}
-      <div className="grid gap-6 xl:gap-4 xl:grid-cols-4">
-       {steps.map((step, idx) => (
-          <div key={step.number} className="flex flex-col">
+      <div className="grid gap-6 lg:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        {steps.map((step) => (
+          <div key={step.number}>
             <Step {...step} />
-            {idx < steps.length - 1 && <PipelineArrow isHorizontal={true} />}
           </div>
         ))}
       </div>
