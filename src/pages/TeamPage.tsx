@@ -9,7 +9,7 @@ const members = [
 
 export function TeamPage() {
   return (
-    <div className="mx-auto max-w-5xl pb-10">
+    <div className="w-full pb-8">
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}

@@ -23,7 +23,7 @@ export function DashboardPage() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl pb-10">
+    <div className="w-full pb-8">
       <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border p-2 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
         {tabs.map(({ to, label, icon: Icon, end }) => (
           <NavLink

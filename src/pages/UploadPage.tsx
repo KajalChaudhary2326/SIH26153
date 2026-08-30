@@ -92,7 +92,7 @@ export function UploadPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="w-full">
       <div className="mb-8">
         <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">Data source</h1>
         <p className="mt-1.5 text-sm text-[var(--color-text-secondary)]">

@@ -37,7 +37,7 @@ export function HomePage() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl pb-8">
+    <div className="w-full pb-8">
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -81,12 +81,12 @@ export function HomePage() {
           initial={{ opacity: 0, y: 24 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="rounded-2xl border p-4 shadow-2xl glow-box"
+          className="rounded-2xl border p-4 shadow-2xl glow-box forecast-chart-card"
           style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Threat model</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-primary)]">Threat model</div>
               <div className="mt-1 text-base font-medium text-[var(--color-text-primary)]">Live forecast preview</div>
             </div>
             {latestPoint && <MITREStageBadge stage={latestPoint.predictedMitreStage} size="lg" />}

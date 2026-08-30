@@ -24,7 +24,7 @@ export function ComparePage() {
       : null;
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="w-full">
       <div className="mb-8">
         <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">
           Baseline comparison

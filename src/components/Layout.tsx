@@ -48,10 +48,10 @@ export function Layout({ children }: { children: ReactNode }) {
                 end={end}
                 onClick={() => setIsMobileNavOpen(false)}
                 className={({ isActive }) =>
-                  `rounded-md px-3 py-2 text-sm transition-colors ${
+                  `nav-glow rounded-md px-3 py-2 text-sm ${
                     isActive
-                      ? "text-[var(--color-accent)]"
-                      : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                      ? "active text-[var(--color-accent)]"
+                      : "text-[var(--color-text-secondary)]"
                   }`
                 }
                 style={({ isActive }) => ({
@@ -95,10 +95,10 @@ export function Layout({ children }: { children: ReactNode }) {
                   end={end}
                   onClick={() => setIsMobileNavOpen(false)}
                   className={({ isActive }) =>
-                    `rounded-md px-3 py-2 text-sm transition-colors ${
+                    `nav-glow rounded-md px-3 py-2 text-sm ${
                       isActive
-                        ? "text-[var(--color-accent)]"
-                        : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                        ? "active text-[var(--color-accent)]"
+                        : "text-[var(--color-text-secondary)]"
                     }`
                   }
                   style={({ isActive }) => ({

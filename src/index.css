@@ -178,3 +178,104 @@ main { min-height: calc(100vh - 140px); }
 .sentinel-app .bg-grid {
   position: relative;
 }
+
+/* Readability fallback: keep inherited/body text on the dark Sentinel canvas visible
+   even when utility classes are not emitted by the CSS build. */
+.sentinel-app { color: var(--color-text-primary); }
+.sentinel-app p { color: var(--color-text-secondary); }
+.sentinel-app h1, .sentinel-app h2, .sentinel-app h3, .sentinel-app h4,
+.sentinel-app h5, .sentinel-app h6 { color: var(--color-text-primary); }
+.sentinel-app button, .sentinel-app a { color: inherit; }
+.sentinel-app .text-cyan-300, .sentinel-app .text-cyan-200 { color: var(--color-accent) !important; }
+
+/* Navbar hover: cyan edge, soft glow and a small lift without changing layout. */
+.nav-glow {
+  position: relative;
+  border: 1px solid transparent;
+  transition: color .22s ease, background-color .22s ease, border-color .22s ease,
+    box-shadow .22s ease, transform .22s ease;
+}
+.nav-glow:hover {
+  color: #fff !important;
+  border-color: color-mix(in srgb, var(--color-accent) 48%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent) 18%, transparent),
+              inset 0 0 12px color-mix(in srgb, var(--color-accent) 7%, transparent);
+  transform: translateY(-1px);
+}
+.nav-glow.active {
+  border-color: color-mix(in srgb, var(--color-accent) 34%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+
+/* Final readability + full-width layout fixes */
+.sentinel-app footer,
+.sentinel-app footer * {
+  color: var(--color-text-secondary);
+}
+.sentinel-app footer .text-primary,
+.sentinel-app footer .text-base,
+.sentinel-app footer h1,
+.sentinel-app footer h2,
+.sentinel-app footer h3,
+.sentinel-app footer h4 {
+  color: var(--color-text-primary) !important;
+}
+.sentinel-app footer a:hover,
+.sentinel-app footer .nav-glow:hover {
+  color: #ffffff !important;
+}
+
+/* Recharts SVG text can fall back to black when CSS variables are not resolved by the renderer. */
+.sentinel-app .recharts-text,
+.sentinel-app .recharts-cartesian-axis-tick-value,
+.sentinel-app .recharts-label,
+.sentinel-app .recharts-legend-item-text {
+  fill: var(--color-text-secondary) !important;
+  color: var(--color-text-secondary) !important;
+}
+.sentinel-app .recharts-cartesian-axis-tick-value {
+  fill: var(--color-text-muted) !important;
+}
+
+/* Use the available viewport instead of making every page look like a narrow centered card. */
+.sentinel-app > main {
+  max-width: none !important;
+}
+.sentinel-app > main > .mx-auto[class*="max-w-"] {
+  max-width: none !important;
+  width: 100%;
+}
+.sentinel-app > header > div,
+.sentinel-app > footer > div {
+  max-width: none !important;
+  width: 100%;
+}
+
+
+/* Final chart readability: keep the graph's labels bright against its near-black canvas. */
+.forecast-chart-card .text-\[var\(--color-text-muted\)\],
+.forecast-chart-card .text-\[var\(--color-text-secondary\)\] {
+  color: #dbeafe !important;
+}
+.forecast-chart-card .recharts-text,
+.forecast-chart-card .recharts-cartesian-axis-tick-value,
+.forecast-chart-card .recharts-label,
+.forecast-chart-card .recharts-legend-item-text {
+  fill: #dbeafe !important;
+  color: #dbeafe !important;
+}
+.forecast-chart-card .recharts-cartesian-axis-tick-value {
+  fill: #dbeafe !important;
+}
+.forecast-chart-card .recharts-reference-line text {
+  fill: #ffffff !important;
+}
+.forecast-chart-card .recharts-tooltip-wrapper {
+  color: #e6ebf5 !important;
+}
+.forecast-chart-card .text-base,
+.forecast-chart-card .text-sm {
+  color: #67e8f9 !important;
+}
