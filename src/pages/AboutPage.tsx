@@ -57,7 +57,7 @@ export function AboutPage() {
             <span className="text-[var(--color-accent)]">not just the isolated alert.</span>
           </h1>
           <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-text-secondary)] sm:text-base">
-            Conventional intrusion detection systems (IDS) evaluate incoming network packets in isolation, alerting defenders only after a malicious payload executes. NetGuard models the temporal transition between network states — reconnaissance sweeps, credential brute force, command-and-control heartbeats, and lateral movement — forecasting future risk before compromise becomes irreversible.
+            Conventional intrusion detection systems (IDS) evaluate incoming network packets in isolation, alerting defenders only after a malicious payload executes. ShieldNet models the temporal transition between network states — reconnaissance sweeps, credential brute force, command-and-control heartbeats, and lateral movement — forecasting future risk before compromise becomes irreversible.
           </p>
         </div>
       </motion.section>
@@ -133,7 +133,7 @@ export function AboutPage() {
           </div>
           <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Dual-Level Telemetry Intelligence</h3>
           <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">
-            Volumetric floods and fast scans appear in aggregate flow rates and port sweeps. Stealthy APTs manifest in subtle inter-arrival timing jitter, packet length deviations, and connection persistence. NetGuard extracts 77 flow statistics and 7 packet burst metrics to detect both vectors.
+            Volumetric floods and fast scans appear in aggregate flow rates and port sweeps. Stealthy APTs manifest in subtle inter-arrival timing jitter, packet length deviations, and connection persistence. ShieldNet extracts 77 flow statistics and 7 packet burst metrics to detect both vectors.
           </p>
         </article>
 
@@ -143,7 +143,7 @@ export function AboutPage() {
           </div>
           <h3 className="text-base font-semibold text-[var(--color-text-primary)]">Critical Information Infrastructure (CII)</h3>
           <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">
-            Designed for high-security environments like power grids, nuclear control facilities, and banking networks (NTRO scope) where cloud connectivity is prohibited. NetGuard operates in 100% air-gapped offline environments with sub-5ms decision cycles.
+            Designed for high-security environments like power grids, nuclear control facilities, and banking networks (NTRO scope) where cloud connectivity is prohibited. ShieldNet operates in 100% air-gapped offline environments with sub-5ms decision cycles.
           </p>
         </article>
       </section>

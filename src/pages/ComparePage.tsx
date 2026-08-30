@@ -14,7 +14,7 @@ export function ComparePage() {
           Model Benchmark &amp; Baseline Comparison
         </h1>
         <p className="mt-1.5 text-sm text-[var(--color-text-secondary)]">
-          Unified evaluation of the NetGuard Recurrent (L=3 GRU) World Model against memoryless linear baselines across held-out test distributions.
+          Unified evaluation of the ShieldNet Recurrent (L=3 GRU) World Model against memoryless linear baselines across held-out test distributions.
         </p>
       </div>
 
@@ -54,7 +54,7 @@ export function ComparePage() {
               <tr className="border-b text-[var(--color-text-muted)]" style={{ borderColor: "var(--color-border)" }}>
                 <th className="pb-3 font-medium">Evaluation Metric</th>
                 <th className="pb-3 font-medium text-right">Logistic Regression</th>
-                <th className="pb-3 font-medium text-right text-[var(--color-accent)]">NetGuard World Model</th>
+                <th className="pb-3 font-medium text-right text-[var(--color-accent)]">ShieldNet World Model</th>
                 <th className="pb-3 font-medium text-right text-[var(--color-normal)]">Gain / Delta</th>
               </tr>
             </thead>

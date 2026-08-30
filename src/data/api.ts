@@ -1,5 +1,5 @@
 /**
- * NetGuard Production API Client for frontend.
+ * ShieldNet Production API Client for frontend.
  * Seamlessly interfaces with local FastAPI backend (http://127.0.0.1:8000/api).
  * Includes robust offline fallback ensuring 100% operational reliability (Constraint C4).
  */
@@ -104,7 +104,7 @@ export interface BenchmarkMatrix {
     metrics: Array<{
       name: string;
       baseline: number;
-      netguard: number;
+      shieldnet: number;
       gain: string;
     }>;
   };
@@ -396,7 +396,7 @@ export async function exportResults(ingestionId: string): Promise<Record<string,
   return {
     exportTimestamp: new Date().toISOString(),
     ingestionId,
-    system: "NetGuard Proactive Threat Forecaster (ShieldNet)",
+    system: "ShieldNet Proactive Threat Forecaster (ShieldNet)",
     timeline,
     flaggedFlows: flows,
   };

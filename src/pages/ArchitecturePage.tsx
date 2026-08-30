@@ -340,7 +340,7 @@ export function ArchitecturePage() {
                   Axiomatic Feature Attribution (Integrated Gradients)
                 </h3>
                 <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-                  To strictly satisfy Problem Statement Constraint C2 (Explainability), NetGuard integrates path-based gradient attribution. It computes feature importance along a straight line path from a neutral benign baseline x' to the input sequence x:
+                  To strictly satisfy Problem Statement Constraint C2 (Explainability), ShieldNet integrates path-based gradient attribution. It computes feature importance along a straight line path from a neutral benign baseline x' to the input sequence x:
                 </p>
 
                 <div className="rounded-xl border p-4 font-mono text-xs bg-[var(--color-base)] text-[var(--color-text-primary)]" style={{ borderColor: "var(--color-border)" }}>
@@ -400,7 +400,7 @@ export function ArchitecturePage() {
                   Dual-Level Feature Representation (84 Dimensions)
                 </h3>
                 <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-                  NetGuard avoids relying solely on aggregate flow summaries by combining macro flow statistics with fine-grained packet burst dynamics, creating an 84-dimensional standardized state representation per time-window.
+                  ShieldNet avoids relying solely on aggregate flow summaries by combining macro flow statistics with fine-grained packet burst dynamics, creating an 84-dimensional standardized state representation per time-window.
                 </p>
 
                 <div className="rounded-xl border p-4 font-mono text-xs bg-[var(--color-base)] text-[var(--color-text-primary)]" style={{ borderColor: "var(--color-border)" }}>
@@ -472,7 +472,7 @@ export function ArchitecturePage() {
             Power Grid &amp; Banking Network Defense (NTRO Scope)
           </h3>
           <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-            Critical infrastructure environments require strict air-gapped offline compliance (Constraint C4) and sub-5ms operational decisions. NetGuard runs entirely on premise with zero cloud dependencies, enabling defensive teams to simulate and act before compromise becomes irreversible.
+            Critical infrastructure environments require strict air-gapped offline compliance (Constraint C4) and sub-5ms operational decisions. ShieldNet runs entirely on premise with zero cloud dependencies, enabling defensive teams to simulate and act before compromise becomes irreversible.
           </p>
         </article>
       </section>
