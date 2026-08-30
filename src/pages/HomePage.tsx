@@ -46,7 +46,7 @@ export function HomePage() {
       >
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-secondary)]" style={{ borderColor: "var(--color-border)" }}>
-            SIH26153 · NTRO
+            ShieldNet · NTRO
           </div>
 
           <h1 className="mt-6 max-w-xl text-4xl font-semibold tracking-tight text-[var(--color-text-primary)] sm:text-5xl">
@@ -194,3 +194,4 @@ export function HomePage() {
     </div>
   );
 }
+
