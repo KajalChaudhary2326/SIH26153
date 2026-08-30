@@ -396,7 +396,7 @@ export async function exportResults(ingestionId: string): Promise<Record<string,
   return {
     exportTimestamp: new Date().toISOString(),
     ingestionId,
-    system: "NetGuard Proactive Threat Forecaster (SIH26153)",
+    system: "NetGuard Proactive Threat Forecaster (ShieldNet)",
     timeline,
     flaggedFlows: flows,
   };
@@ -470,3 +470,4 @@ export async function evaluateMitigationActions(scenarioId: string): Promise<Mit
     ],
   };
 }
+

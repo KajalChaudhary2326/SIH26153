@@ -66,7 +66,7 @@ export function ArchitecturePage() {
         <div className="max-w-4xl">
           <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wider text-[var(--color-accent)] border-[var(--color-accent)]/30 bg-[var(--color-accent)]/10 mb-3">
             <Cpu size={13} />
-            SIH26153 · Technical Architecture Specification
+            ShieldNet · Technical Architecture Specification
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-[var(--color-text-primary)] sm:text-4xl">
             Recurrent State-Space Neural World Model (RSS-WM)
@@ -479,3 +479,4 @@ export function ArchitecturePage() {
     </div>
   );
 }
+

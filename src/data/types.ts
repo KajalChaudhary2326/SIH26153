@@ -1,4 +1,4 @@
-// Types mirror the backend schema (Section 8, SIH26153 spec) exactly so a real
+// Types mirror the backend schema (Section 8, ShieldNet spec) exactly so a real
 // API can be swapped in behind src/data/api.ts with zero changes to components.
 
 export type SourceType = "csv" | "pcap";
@@ -86,3 +86,4 @@ export interface TimelinePoint {
   predictionId: string;
   isProjection: boolean; // true for k_step_offset > 0 (forward-simulated / "ghosted")
 }
+

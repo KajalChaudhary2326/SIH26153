@@ -1,6 +1,6 @@
-# Sentinel — Network Attack Forecasting Dashboard (Frontend)
+# ShieldNet — Network Attack Forecasting Dashboard (Frontend)
 
-Frontend-only build for **SIH26153** (NTRO, Blockchain & Cybersecurity theme). This is the
+Frontend-only build for **ShieldNet** (NTRO, Blockchain & Cybersecurity theme). This is the
 UI/UX layer for a World Model-based network attack forecasting tool — there is no backend
 here. Every screen reads through a single mock data layer behind a typed API interface, so
 a real backend can be wired in later with no component changes.
@@ -93,3 +93,4 @@ made tangible in the UI.
   grows further, not done here to keep the swap-in-a-backend surface small.
 - Recharts is used for line/bar charts rather than raw D3/Plotly, per the tech-stack
   brief's "Recharts (or Plotly.js if you prefer richer interactivity)" allowance.
+

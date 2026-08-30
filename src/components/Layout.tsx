@@ -140,7 +140,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <div className="mt-1 text-sm text-[var(--color-text-secondary)]">SHIELDNET helps defenders see the next state of the network before compromise.</div>
             </div>
             <div className="inline-flex w-fit items-center rounded-full border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-secondary)]" style={{ borderColor: "var(--color-border)" }}>
-              SIH26153 · NTRO · Blockchain &amp; Cybersecurity
+              ShieldNet · NTRO · Blockchain &amp; Cybersecurity
             </div>
           </div>
 
@@ -160,3 +160,4 @@ export function Layout({ children }: { children: ReactNode }) {
     </div>
   );
 }
+

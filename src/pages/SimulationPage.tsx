@@ -93,7 +93,7 @@ export function SimulationPage() {
     <div className="flex flex-col gap-6">
       {/* Top Header & Scenario Selector */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 font-mono text-xs text-[var(--color-text-secondary)]">
             <Activity size={14} className="text-[var(--color-accent)]" />
             <span>SCENARIO PRESET:</span>
@@ -102,7 +102,9 @@ export function SimulationPage() {
             value={activeIngestion?.id || selectedSessionId}
             onChange={(e) => handleSessionChange(e.target.value)}
             className="rounded-md border bg-[var(--color-base)] px-3 py-1.5 font-mono text-xs text-[var(--color-text-primary)] transition-colors focus:border-[var(--color-accent)] focus:outline-none"
-            style={{ borderColor: "var(--color-border)" }}
+            style={{ 
+              borderColor: "var(--color-border)"
+            }}
           >
             {sessions.map((sess) => (
               <option key={sess.id} value={sess.id}>
@@ -153,11 +155,11 @@ export function SimulationPage() {
         <div className="flex flex-col gap-6">
           {/* Timeline Chart */}
           <div
-            className={`relative h-84 rounded-xl border p-4 ${isCritical ? "critical-edge-glow" : ""}`}
+            className="relative h-84 rounded-xl border p-4"
             style={{
               borderColor: isCritical ? "var(--color-critical)" : "var(--color-border)",
               backgroundColor: "var(--color-panel)",
-              boxShadow: isCritical ? "0 0 24px -6px var(--color-critical)" : "none",
+              boxShadow: isCritical ? "0 0 18px -8px var(--color-critical)" : "none",
             }}
           >
             <div className="mb-2 flex items-center justify-between">
