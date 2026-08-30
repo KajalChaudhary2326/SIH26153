@@ -7,7 +7,6 @@ import { ProbabilityTimeline } from "../components/ProbabilityTimeline";
 import { MetricCard } from "../components/MetricCard";
 import { CoreCapabilitiesSection } from "../components/CoreCapabilitiesSection";
 import { HowItWorksSection } from "../components/HowItWorksSection";
-import { ImpactSection } from "../components/ImpactSection";
 import { getTimeline } from "../data/api";
 import type { TimelinePoint } from "../data/types";
 
@@ -116,16 +115,6 @@ export function HomePage() {
         className="mt-16"
       >
         <HowItWorksSection />
-      </motion.section>
-
-      <motion.section
-        initial={{ opacity: 0, y: 28 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.15 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
-        className="mt-16"
-      >
-        <ImpactSection />
       </motion.section>
 
       <motion.section
