@@ -1,28 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Gauge, ShieldCheck, Layers3, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { MITREStageBadge } from "../components/MITREStageBadge";
 import { ProbabilityTimeline } from "../components/ProbabilityTimeline";
 import { MetricCard } from "../components/MetricCard";
+import { CoreCapabilitiesSection } from "../components/CoreCapabilitiesSection";
+import { HowItWorksSection } from "../components/HowItWorksSection";
+import { ImpactSection } from "../components/ImpactSection";
 import { getTimeline } from "../data/api";
 import type { TimelinePoint } from "../data/types";
-
-const featureCards = [
-  { title: "World Model Core", text: "Learns network state transitions instead of scoring isolated flows." },
-  { title: "K-Step Forecasting", text: "Rolls the model forward to expose where an attack trajectory is headed." },
-  { title: "MITRE Stage Mapping", text: "Translates forecast risk into reconnaissance-to-exfiltration stages." },
-  { title: "Explainability", text: "Shows the top features driving each forecast in plain language." },
-  { title: "Dual-Level Features", text: "Combines flow-level and packet-level telemetry to catch stealthy patterns." },
-  { title: "Fully Offline", text: "Everything runs locally, from ingestion to inference to export." },
-];
-
-const steps = [
-  { title: "Ingest", text: "Load telemetry from CSV or PCAP sources to build a local risk timeline." },
-  { title: "Learn Temporal Behavior", text: "Model the sequence and timing of packets, ports, and flows over time." },
-  { title: "Forecast", text: "Project the next K windows and surface rising attack probability early." },
-  { title: "Explain", text: "Map the state transition back to MITRE stages and feature drivers." },
-];
 
 export function HomePage() {
   const [timeline, setTimeline] = useState<TimelinePoint[]>([]);
@@ -54,7 +41,7 @@ export function HomePage() {
           </h1>
 
           <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--color-text-secondary)]">
-            Sentinel reads temporal network behavior, projects the next K windows, and explains
+            ShieldNet reads temporal network behavior, projects the next K windows, and explains
             why a trajectory is accelerating toward lateral movement, C2, or exfiltration.
           </p>
 
@@ -116,59 +103,29 @@ export function HomePage() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.15 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
-        className="mt-14"
+        className="mt-16"
       >
-        <div className="mb-6 flex items-center gap-3 text-xl font-semibold uppercase tracking-[0.18em] text-[var(--color-text-primary)] sm:text-2xl">
-          <Sparkles size={14} style={{ color: "var(--color-accent)" }} />
-          Core capabilities
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {featureCards.map((feature) => (
-            <div
-              key={feature.title}
-              className="rounded-xl border p-5 glow-box"
-              style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}
-            >
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-md" style={{ backgroundColor: "color-mix(in srgb, var(--color-accent) 12%, transparent)" }}>
-                <Layers3 size={18} style={{ color: "var(--color-accent)" }} />
-              </div>
-              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{feature.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">{feature.text}</p>
-            </div>
-          ))}
-        </div>
+        <CoreCapabilitiesSection />
       </motion.section>
 
       <motion.section
-        id="how-it-works"
         initial={{ opacity: 0, y: 28 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.15 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
         className="mt-16"
       >
-        <div className="mb-6 flex items-center gap-3 text-xl font-semibold uppercase tracking-[0.18em] text-[var(--color-text-primary)] sm:text-2xl">
-          <Gauge size={14} style={{ color: "var(--color-accent)" }} />
-          How it works
-        </div>
+        <HowItWorksSection />
+      </motion.section>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {steps.map((step, index) => (
-            <div
-              key={step.title}
-              className="rounded-xl border p-5 glow-box"
-              style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">0{index + 1}</span>
-                <ShieldCheck size={16} style={{ color: "var(--color-normal)" }} />
-              </div>
-              <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">{step.text}</p>
-            </div>
-          ))}
-        </div>
+      <motion.section
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="mt-16"
+      >
+        <ImpactSection />
       </motion.section>
 
       <motion.section

@@ -1,4 +1,4 @@
-# Sentinel — Network Attack Forecasting Dashboard (Frontend)
+# ShieldNet — Network Attack Forecasting Dashboard (Frontend)
 
 Frontend-only build for **ShieldNet** (NTRO, Blockchain & Cybersecurity theme). This is the
 UI/UX layer for a World Model-based network attack forecasting tool — there is no backend
