@@ -118,7 +118,7 @@ export function HomePage() {
         transition={{ duration: 0.45, ease: "easeOut" }}
         className="mt-14"
       >
-        <div className="mb-6 flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-secondary)]">
+        <div className="mb-6 flex items-center gap-3 text-xl font-semibold uppercase tracking-[0.18em] text-[var(--color-text-primary)] sm:text-2xl">
           <Sparkles size={14} style={{ color: "var(--color-accent)" }} />
           Core capabilities
         </div>
@@ -148,7 +148,7 @@ export function HomePage() {
         transition={{ duration: 0.45, ease: "easeOut" }}
         className="mt-16"
       >
-        <div className="mb-6 flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-secondary)]">
+        <div className="mb-6 flex items-center gap-3 text-xl font-semibold uppercase tracking-[0.18em] text-[var(--color-text-primary)] sm:text-2xl">
           <Gauge size={14} style={{ color: "var(--color-accent)" }} />
           How it works
         </div>

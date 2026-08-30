@@ -1,29 +1,37 @@
 import { useEffect, useRef } from "react";
+import { useTheme } from "../context/ThemeContext";
 import * as THREE from "three";
 
-const CYAN = new THREE.Color(0x22d3ee);
-const BLUE = new THREE.Color(0x60a5fa);
-const PALE = new THREE.Color(0xdbeafe);
+const DARK_CYAN = new THREE.Color(0x0891b2);
+const DARK_BLUE = new THREE.Color(0x2563eb);
+const DARK_PALE = new THREE.Color(0xc7f3f8);
+
 
 export function Sparkle3DBackground() {
+  const { theme } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
+    const isLightTheme = theme === "light";
+    // Keep the 3D animation colors identical in both themes: use the original dark-theme palette.
+    const CYAN = DARK_CYAN;
+    const BLUE = DARK_BLUE;
+    const PALE = DARK_PALE;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
-      alpha: false,
+      alpha: true,
       powerPreference: "high-performance",
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x0a0e17, 1);
+    renderer.setClearColor(0x000000, 0);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0e17);
+    scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(
       50,
@@ -75,7 +83,7 @@ export function Sparkle3DBackground() {
           vec2 uv = gl_PointCoord - 0.5;
           float d = length(uv);
           float a = smoothstep(0.5, 0.0, d);
-          vec3 starColor = vec3(0.78, 0.9, 1.0);
+          vec3 starColor = vec3(${isLightTheme ? "0.78, 0.91, 0.95" : "0.62, 0.86, 0.96"});
           gl_FragColor = vec4(starColor, a * (0.25 + vTwinkle * 0.55));
         }
       `,
@@ -419,7 +427,7 @@ export function Sparkle3DBackground() {
         p.rot += p.rotSpeed * dt;
 
         const size = p.size0 + (p.size1 - p.size0) * f;
-        const opacity = Math.sin(Math.min(f, 1) * Math.PI) * 0.6;
+        const opacity = Math.sin(Math.min(f, 1) * Math.PI) * (isLightTheme ? 0.14 : 0.6);
         p.sprite.position.set(p.x, p.y, 0);
         p.sprite.scale.set(size, size, 1);
         p.sprite.material.rotation = p.rot;
@@ -447,7 +455,7 @@ export function Sparkle3DBackground() {
       trailParticles.forEach((p) => p.sprite.material.dispose());
       renderer.dispose();
     };
-  }, []);
+  }, [theme]);
 
   return (
     <canvas

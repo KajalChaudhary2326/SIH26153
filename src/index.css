@@ -39,10 +39,10 @@
 html.light {
   color-scheme: light;
 
-  --color-base: #f1f5f9;
-  --color-panel: #ffffff;
-  --color-panel-raised: #e2e8f0;
-  --color-border: #cbd5e1;
+  --color-base: #e9f9fc;
+  --color-panel: #f3fcfd;
+  --color-panel-raised: #e1f6fa;
+  --color-border: #a9e3f2;
 
   --color-accent: #0284c7;
   --color-critical: #e11d48;
@@ -75,6 +75,30 @@ body {
     linear-gradient(to right, color-mix(in srgb, var(--color-border) 45%, transparent) 1px, transparent 1px),
     linear-gradient(to bottom, color-mix(in srgb, var(--color-border) 45%, transparent) 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+/* Keep the dark theme clean: the 3D animation remains, but the grid is removed. */
+html.dark .bg-grid {
+  background-image: none;
+}
+
+/* Remove the grid in the light theme so the reference-style background stays clean. */
+html.light .bg-grid {
+  background-image: none;
+}
+
+/* Slightly tighter typography to reduce empty vertical gaps without changing the layout. */
+.sentinel-app main h1 {
+  font-size: clamp(2.35rem, 4vw, 3.65rem);
+  line-height: 1.08;
+}
+
+.sentinel-app main h2 {
+  line-height: 1.18;
+}
+
+.sentinel-app main h3 {
+  line-height: 1.2;
 }
 
 ::selection {
@@ -127,7 +151,15 @@ html.dark .glow-box {
 }
 
 html.light .glow-box {
-  box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 0 1px 1px rgba(203, 213, 225, 0.6);
+  box-shadow: 0 6px 18px -4px rgba(14, 116, 144, 0.12), 0 0 1px 1px rgba(125, 211, 252, 0.55);
+}
+
+html.light .sentinel-app [style*="backgroundColor: var(--color-panel)"] {
+  background-color: var(--color-panel) !important;
+}
+
+html.light .sentinel-app [style*="backgroundColor: var(--color-base)"] {
+  background-color: #e6f7fa !important;
 }
 
 .sparkle-3d-background {
@@ -142,7 +174,8 @@ html.light .glow-box {
 }
 
 html.light .sparkle-3d-background {
-  opacity: 0.15;
+  opacity: 0.72;
+  mix-blend-mode: normal;
 }
 
 /* Interactive navigation glow */
