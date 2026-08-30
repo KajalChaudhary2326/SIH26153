@@ -36,7 +36,7 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
             <div>
               <div className="text-base font-semibold tracking-tight text-[var(--color-text-primary)]">ShieldNet</div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">SIH26153 · NTRO</div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Shieldnet · NTRO</div>
             </div>
           </Link>
 
