@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { ArrowRight, Menu, Shield, X } from "lucide-react";
 import { OfflineStatusBadge } from "./OfflineStatusBadge";
+import { ThemeToggle } from "./ThemeToggle";
 import { Sparkle3DBackground } from "./Sparkle3DBackground";
 
 const NAV_ITEMS = [
@@ -9,7 +10,6 @@ const NAV_ITEMS = [
   { to: "/about", label: "About", end: false },
   { to: "/architecture", label: "Architecture", end: false },
   { to: "/dashboard", label: "Live Demo", end: false },
-  { to: "/team", label: "Team", end: false },
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -36,7 +36,7 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
             <div>
               <div className="text-base font-semibold tracking-tight text-[var(--color-text-primary)]">Sentinel</div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">SIH26153</div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">SIH26153 · NTRO</div>
             </div>
           </Link>
 
@@ -48,7 +48,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 end={end}
                 onClick={() => setIsMobileNavOpen(false)}
                 className={({ isActive }) =>
-                  `nav-glow rounded-md px-3 py-2 text-sm ${
+                  `nav-glow rounded-md px-3 py-2 text-sm font-medium ${
                     isActive
                       ? "active text-[var(--color-accent)]"
                       : "text-[var(--color-text-secondary)]"
@@ -64,25 +64,29 @@ export function Layout({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
+            <ThemeToggle />
             <OfflineStatusBadge />
             <Link
               to="/dashboard"
-              className="inline-flex items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-base)] transition-opacity hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-base)] transition-opacity hover:opacity-90 shadow-sm"
             >
               Try Live Demo
               <ArrowRight size={15} />
             </Link>
           </div>
 
-          <button
-            type="button"
-            aria-label="Toggle navigation menu"
-            className="inline-flex items-center justify-center rounded-md border p-2 md:hidden glow-box"
-            style={{ borderColor: "var(--color-border)", color: "var(--color-text-primary)" }}
-            onClick={() => setIsMobileNavOpen((prev) => !prev)}
-          >
-            {isMobileNavOpen ? <X size={18} /> : <Menu size={18} />}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
+            <button
+              type="button"
+              aria-label="Toggle navigation menu"
+              className="inline-flex items-center justify-center rounded-md border p-2 glow-box"
+              style={{ borderColor: "var(--color-border)", color: "var(--color-text-primary)" }}
+              onClick={() => setIsMobileNavOpen((prev) => !prev)}
+            >
+              {isMobileNavOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
         </div>
 
         {isMobileNavOpen && (
@@ -95,7 +99,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   end={end}
                   onClick={() => setIsMobileNavOpen(false)}
                   className={({ isActive }) =>
-                    `nav-glow rounded-md px-3 py-2 text-sm ${
+                    `nav-glow rounded-md px-3 py-2 text-sm font-medium ${
                       isActive
                         ? "active text-[var(--color-accent)]"
                         : "text-[var(--color-text-secondary)]"
@@ -136,19 +140,19 @@ export function Layout({ children }: { children: ReactNode }) {
               <div className="mt-1 text-sm text-[var(--color-text-secondary)]">Sentinel helps defenders see the next state of the network before compromise.</div>
             </div>
             <div className="inline-flex w-fit items-center rounded-full border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-secondary)]" style={{ borderColor: "var(--color-border)" }}>
-              SIH26153 · NTRO · Blockchain & Cybersecurity
+              SIH26153 · NTRO · Blockchain &amp; Cybersecurity
             </div>
           </div>
 
           <div className="flex flex-col gap-3 border-t pt-4 text-sm md:flex-row md:items-center md:justify-between" style={{ borderColor: "var(--color-border)" }}>
-            <a href="https://github.com/" target="_blank" rel="noreferrer" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">
-              GitHub repo
-            </a>
+            <div className="font-mono text-xs text-[var(--color-text-muted)]">
+              Offline Neural World Model Architecture (Constraint C4 Compliant)
+            </div>
             <div className="flex flex-wrap items-center gap-4 text-[var(--color-text-muted)]">
               <NavLink to="/" className="hover:text-[var(--color-text-primary)]">Home</NavLink>
               <NavLink to="/about" className="hover:text-[var(--color-text-primary)]">About</NavLink>
               <NavLink to="/architecture" className="hover:text-[var(--color-text-primary)]">Architecture</NavLink>
-              <NavLink to="/team" className="hover:text-[var(--color-text-primary)]">Team</NavLink>
+              <NavLink to="/dashboard" className="hover:text-[var(--color-text-primary)]">Live Demo</NavLink>
             </div>
           </div>
         </div>

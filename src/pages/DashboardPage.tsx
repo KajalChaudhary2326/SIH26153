@@ -1,14 +1,15 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, BarChart3, Shield, Upload } from "lucide-react";
+import { Activity, BarChart3, Eye, Upload } from "lucide-react";
 import { UploadPage } from "./UploadPage";
 import { SimulationPage } from "./SimulationPage";
+import { ExplainabilityPage } from "./ExplainabilityPage";
 import { ComparePage } from "./ComparePage";
 
 const tabs = [
   { to: "/dashboard", label: "Upload", icon: Upload, end: true },
   { to: "/dashboard/simulation", label: "Live Simulation", icon: Activity },
-  { to: "/dashboard/explainability", label: "Explainability", icon: Shield },
+  { to: "/dashboard/explainability", label: "Explainability", icon: Eye },
   { to: "/dashboard/baseline", label: "Baseline Comparison", icon: BarChart3 },
 ];
 
@@ -17,7 +18,8 @@ export function DashboardPage() {
 
   const renderTabContent = () => {
     if (location.pathname === "/dashboard" || location.pathname === "/dashboard/") return <UploadPage />;
-    if (location.pathname === "/dashboard/simulation" || location.pathname === "/dashboard/explainability") return <SimulationPage />;
+    if (location.pathname === "/dashboard/simulation") return <SimulationPage />;
+    if (location.pathname === "/dashboard/explainability") return <ExplainabilityPage />;
     if (location.pathname === "/dashboard/baseline") return <ComparePage />;
     return <UploadPage />;
   };
@@ -31,7 +33,7 @@ export function DashboardPage() {
             to={to}
             end={end}
             className={({ isActive }) =>
-              `inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
+              `inline-flex items-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium transition-colors ${
                 isActive ? "text-[var(--color-accent)]" : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
               }`
             }
@@ -40,7 +42,7 @@ export function DashboardPage() {
               border: isActive ? "1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border))" : "1px solid transparent",
             })}
           >
-            <Icon size={14} />
+            <Icon size={15} />
             {label}
           </NavLink>
         ))}

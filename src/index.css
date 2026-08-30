@@ -9,6 +9,10 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root, html.dark {
+  color-scheme: dark;
 
   --color-base: #0a0e17;
   --color-panel: #151b2b;
@@ -32,8 +36,29 @@
   --color-text-muted: #5b6580;
 }
 
-html {
-  color-scheme: dark;
+html.light {
+  color-scheme: light;
+
+  --color-base: #f1f5f9;
+  --color-panel: #ffffff;
+  --color-panel-raised: #e2e8f0;
+  --color-border: #cbd5e1;
+
+  --color-accent: #0284c7;
+  --color-critical: #e11d48;
+  --color-elevated: #ea580c;
+  --color-watch: #d97706;
+  --color-normal: #059669;
+
+  --color-mitre-recon: #4f46e5;
+  --color-mitre-initial: #db2777;
+  --color-mitre-lateral: #ea580c;
+  --color-mitre-c2: #e11d48;
+  --color-mitre-exfil: #b91c1c;
+
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748b;
 }
 
 body {
@@ -41,14 +66,14 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Faint scanline / grid texture on the base background — command-center feel,
-   applied once at the root rather than decoratively per-panel. */
+/* Faint scanline / grid texture on the base background */
 .bg-grid {
   background-image:
-    linear-gradient(to right, rgba(37, 48, 73, 0.35) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(37, 48, 73, 0.35) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in srgb, var(--color-border) 45%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-border) 45%, transparent) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
@@ -96,107 +121,37 @@ body {
   }
 }
 
-
 /* Premium typography + full-width command-center layout */
-body { letter-spacing: -0.01em; }
-h1, h2, h3, h4 { letter-spacing: -0.025em; text-wrap: balance; }
-main { min-height: calc(100vh - 140px); }
-
-/* React Bits-inspired Border Glow: animated conic border + soft bloom. */
-.glow-box {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
-}
-.glow-box::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  z-index: -1;
-  border-radius: inherit;
-  padding: 1.25px;
-  background: conic-gradient(from var(--glow-angle, 0deg), transparent 0 18%, rgba(34,211,238,.05) 26%, rgba(34,211,238,.9) 35%, rgba(96,165,250,.16) 45%, transparent 58% 100%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: border-glow-spin 4.8s linear infinite;
-}
-.glow-box::after {
-  content: "";
-  position: absolute;
-  inset: -12px;
-  z-index: -2;
-  border-radius: inherit;
-  background: conic-gradient(from var(--glow-angle, 0deg), transparent 0 25%, rgba(34,211,238,.28) 36%, transparent 48% 100%);
-  filter: blur(16px);
-  opacity: .18;
-  animation: border-glow-spin 4.8s linear infinite;
-  transition: opacity .28s ease, filter .28s ease;
-}
-.glow-box:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border)) !important;
-  box-shadow: 0 14px 40px rgba(0,0,0,.22), 0 0 28px rgba(34,211,238,.10);
-}
-.glow-box:hover::after { opacity: .75; filter: blur(12px); }
-@keyframes border-glow-spin { to { --glow-angle: 360deg; } }
-@property --glow-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-
-/* Make the blue accent surfaces readable. */
-.bg-\[var\(--color-accent\)\], [style*="background-color: var(--color-accent)"] { color: #fff !important; }
-
-@media (prefers-reduced-motion: reduce) {
-  .glow-box::before, .glow-box::after { animation: none; }
-  .glow-box:hover { transform: none; }
+html.dark .glow-box {
+  box-shadow: 0 0 24px -6px rgba(34, 211, 238, 0.06), 0 0 1px 1px rgba(37, 48, 73, 0.45);
 }
 
-
-/* Full-page reference 3D sparkle field. It stays behind every route and section. */
-.sentinel-app {
-  position: relative;
-  isolation: isolate;
-  overflow-x: clip;
+html.light .glow-box {
+  box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 0 1px 1px rgba(203, 213, 225, 0.6);
 }
+
 .sparkle-3d-background {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 0;
   pointer-events: none;
-  display: block;
-}
-.sentinel-app > header,
-.sentinel-app > main,
-.sentinel-app > footer {
-  position: relative;
-  z-index: 10;
+  z-index: 0;
+  opacity: 0.45;
+  transition: opacity 0.3s ease;
 }
 
-/* Let the supplied 3D field remain visible around the existing UI without changing layout/design. */
-.sentinel-app .bg-grid {
-  position: relative;
+html.light .sparkle-3d-background {
+  opacity: 0.15;
 }
 
-/* Readability fallback: keep inherited/body text on the dark Sentinel canvas visible
-   even when utility classes are not emitted by the CSS build. */
-.sentinel-app { color: var(--color-text-primary); }
-.sentinel-app p { color: var(--color-text-secondary); }
-.sentinel-app h1, .sentinel-app h2, .sentinel-app h3, .sentinel-app h4,
-.sentinel-app h5, .sentinel-app h6 { color: var(--color-text-primary); }
-.sentinel-app button, .sentinel-app a { color: inherit; }
-.sentinel-app .text-cyan-300, .sentinel-app .text-cyan-200 { color: var(--color-accent) !important; }
-
-/* Navbar hover: cyan edge, soft glow and a small lift without changing layout. */
+/* Interactive navigation glow */
 .nav-glow {
   position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   border: 1px solid transparent;
-  transition: color .22s ease, background-color .22s ease, border-color .22s ease,
-    box-shadow .22s ease, transform .22s ease;
 }
 .nav-glow:hover {
-  color: #fff !important;
   border-color: color-mix(in srgb, var(--color-accent) 48%, transparent);
   background: color-mix(in srgb, var(--color-accent) 9%, transparent);
   box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent) 18%, transparent),
@@ -208,8 +163,7 @@ main { min-height: calc(100vh - 140px); }
   box-shadow: 0 0 14px color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
-
-/* Final readability + full-width layout fixes */
+/* Footer styles */
 .sentinel-app footer,
 .sentinel-app footer * {
   color: var(--color-text-secondary);
@@ -224,10 +178,10 @@ main { min-height: calc(100vh - 140px); }
 }
 .sentinel-app footer a:hover,
 .sentinel-app footer .nav-glow:hover {
-  color: #ffffff !important;
+  color: var(--color-accent) !important;
 }
 
-/* Recharts SVG text can fall back to black when CSS variables are not resolved by the renderer. */
+/* Recharts SVG text handling */
 .sentinel-app .recharts-text,
 .sentinel-app .recharts-cartesian-axis-tick-value,
 .sentinel-app .recharts-label,
@@ -239,7 +193,7 @@ main { min-height: calc(100vh - 140px); }
   fill: var(--color-text-muted) !important;
 }
 
-/* Use the available viewport instead of making every page look like a narrow centered card. */
+/* Full-width responsive container */
 .sentinel-app > main {
   max-width: none !important;
 }
@@ -253,29 +207,28 @@ main { min-height: calc(100vh - 140px); }
   width: 100%;
 }
 
-
-/* Final chart readability: keep the graph's labels bright against its near-black canvas. */
-.forecast-chart-card .text-\[var\(--color-text-muted\)\],
-.forecast-chart-card .text-\[var\(--color-text-secondary\)\] {
+/* Chart text clarity */
+html.dark .forecast-chart-card .text-\[var\(--color-text-muted\)\],
+html.dark .forecast-chart-card .text-\[var\(--color-text-secondary\)\] {
   color: #dbeafe !important;
 }
-.forecast-chart-card .recharts-text,
-.forecast-chart-card .recharts-cartesian-axis-tick-value,
-.forecast-chart-card .recharts-label,
-.forecast-chart-card .recharts-legend-item-text {
+html.dark .forecast-chart-card .recharts-text,
+html.dark .forecast-chart-card .recharts-cartesian-axis-tick-value,
+html.dark .forecast-chart-card .recharts-label,
+html.dark .forecast-chart-card .recharts-legend-item-text {
   fill: #dbeafe !important;
   color: #dbeafe !important;
 }
-.forecast-chart-card .recharts-cartesian-axis-tick-value {
+html.dark .forecast-chart-card .recharts-cartesian-axis-tick-value {
   fill: #dbeafe !important;
 }
-.forecast-chart-card .recharts-reference-line text {
+html.dark .forecast-chart-card .recharts-reference-line text {
   fill: #ffffff !important;
 }
-.forecast-chart-card .recharts-tooltip-wrapper {
+html.dark .forecast-chart-card .recharts-tooltip-wrapper {
   color: #e6ebf5 !important;
 }
-.forecast-chart-card .text-base,
-.forecast-chart-card .text-sm {
+html.dark .forecast-chart-card .text-base,
+html.dark .forecast-chart-card .text-sm {
   color: #67e8f9 !important;
 }
