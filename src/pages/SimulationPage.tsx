@@ -1,18 +1,24 @@
 import { useEffect, useState } from "react";
-import { RotateCcw, Shield, ShieldCheck, AlertTriangle, Activity } from "lucide-react";
+import { RotateCcw, Activity, FileText } from "lucide-react";
 import { ProbabilityTimeline } from "../components/ProbabilityTimeline";
 import { KStepProjection } from "../components/KStepProjection";
 import { FlaggedFlowsList } from "../components/FlaggedFlowsList";
 import { MITREStageBadge } from "../components/MITREStageBadge";
 import { ExplainabilityPanel } from "../components/ExplainabilityPanel";
 import { ExportButton } from "../components/ExportButton";
+import { TelemetryHeader } from "../components/TelemetryHeader";
+import { MitreLifecycleTimeline } from "../components/MitreLifecycleTimeline";
+import { DefenseSandboxPanel } from "../components/DefenseSandboxPanel";
+import { IncidentDossierModal } from "../components/IncidentDossierModal";
 import {
   getTimeline,
   getFlaggedFlows,
   getSampleSessions,
   evaluateMitigationActions,
+  getMitreReasoning,
   type ScenarioSession,
   type MitigationResponse,
+  type MitreReasoningResponse,
 } from "../data/api";
 import { useAppStore } from "../store/useAppStore";
 import type { FlaggedFlow, Severity, TimelinePoint } from "../data/types";
@@ -30,9 +36,11 @@ export function SimulationPage() {
   const [replayKey, setReplayKey] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Counterfactual Mitigation state
+  // Counterfactual Mitigation & Symbolic MITRE state
   const [mitigationData, setMitigationData] = useState<MitigationResponse | null>(null);
   const [selectedAction, setSelectedAction] = useState<string>("RESET_CONNECTIONS");
+  const [mitreReasoning, setMitreReasoning] = useState<MitreReasoningResponse | null>(null);
+  const [isDossierOpen, setIsDossierOpen] = useState(false);
 
   useEffect(() => {
     getSampleSessions().then((sList) => {
@@ -54,16 +62,28 @@ export function SimulationPage() {
   useEffect(() => {
     const sessId = activeIngestion?.id || selectedSessionId;
     setLoading(true);
-    Promise.all([getTimeline(sessId), getFlaggedFlows(), evaluateMitigationActions(sessId)]).then(
-      ([tl, fl, mit]) => {
-        setTimeline(tl);
-        setFlows(fl);
-        setMitigationData(mit);
-        setSelectedAction(mit.safety_shield_recommendation || "RESET_CONNECTIONS");
-        setLoading(false);
-      }
-    );
-  }, [activeIngestion?.id, selectedSessionId, replayKey]);
+
+    const currentSess = sessions.find((s) => s.id === sessId);
+
+    Promise.all([
+      getTimeline(sessId),
+      getFlaggedFlows(),
+      evaluateMitigationActions(sessId),
+      getMitreReasoning({
+        predicted_class: currentSess?.ground_truth_label || "SSH-Patator",
+        confidence: currentSess ? currentSess.threat_trajectory.slice(-1)[0] : 0.98,
+        host_ip: currentSess?.host_ip || "172.16.0.1",
+        target_ip: currentSess?.target_ip || "192.168.10.50",
+      }),
+    ]).then(([tl, fl, mit, reason]) => {
+      setTimeline(tl);
+      setFlows(fl);
+      setMitigationData(mit);
+      setSelectedAction(mit.safety_shield_recommendation || "RESET_CONNECTIONS");
+      setMitreReasoning(reason);
+      setLoading(false);
+    });
+  }, [activeIngestion?.id, selectedSessionId, replayKey, sessions]);
 
   function handleSessionChange(id: string) {
     setSelectedSessionId(id);
@@ -87,10 +107,11 @@ export function SimulationPage() {
     (latestObserved?.infiltrationProbability ?? 0) >= 0.8 ||
     projectedPoints.some((p) => p.infiltrationProbability >= 0.8);
 
-  const activeMitigation = mitigationData?.actions.find((a) => a.action === selectedAction);
-
   return (
     <div className="flex flex-col gap-6">
+      {/* Sovereign Telemetry Header */}
+      <TelemetryHeader />
+
       {/* Top Header & Scenario Selector */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3">
@@ -116,6 +137,14 @@ export function SimulationPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsDossierOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-white transition-all shadow-md hover:scale-105"
+            style={{ backgroundColor: "var(--color-accent)" }}
+          >
+            <FileText size={13} />
+            <span>Sovereign Dossier</span>
+          </button>
           <button
             onClick={() => setReplayKey((k) => k + 1)}
             className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-panel-raised)]"
@@ -149,6 +178,12 @@ export function SimulationPage() {
           </div>
         </div>
       )}
+
+      {/* Symbolic MITRE ATT&CK Lifecycle Timeline */}
+      <MitreLifecycleTimeline
+        reasoning={mitreReasoning}
+        currentStage={currentSession?.mitre_stage || 2}
+      />
 
       {/* Main Grid: Forecast Timeline & Side Panels */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
@@ -193,101 +228,13 @@ export function SimulationPage() {
             />
           )}
 
-          {/* Counterfactual Mitigation & Safety Shield Simulator */}
-          <div className="rounded-xl border p-5 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b pb-3" style={{ borderColor: "var(--color-border)" }}>
-              <div className="flex items-center gap-2">
-                <Shield className="text-[var(--color-accent)]" size={18} />
-                <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                  Counterfactual Mitigation Engine &amp; Safety Shield
-                </h2>
-              </div>
-              <div className="flex items-center gap-2 font-mono text-xs">
-                <span className="text-[var(--color-text-muted)]">SAFETY SHIELD DECISION:</span>
-                <span className="rounded bg-[var(--color-normal)]/20 px-2 py-0.5 font-bold text-[var(--color-normal)] border border-[var(--color-normal)]/40">
-                  {mitigationData?.safety_shield_recommendation || "RESET_CONNECTIONS"}
-                </span>
-              </div>
-            </div>
-
-            <p className="mb-4 text-xs text-[var(--color-text-secondary)] leading-relaxed">
-              Select a defensive intervention operator T(S_t, a) to simulate forward trajectory divergence and evaluate risk reduction vs. operational disruption cost.
-            </p>
-
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5 mb-4">
-              {mitigationData?.actions.map((act) => {
-                const isSelected = selectedAction === act.action;
-                return (
-                  <button
-                    key={act.action}
-                    onClick={() => setSelectedAction(act.action)}
-                    className={`flex flex-col items-start justify-between rounded-lg border p-3 text-left transition-all ${
-                      isSelected
-                        ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10 shadow-lg"
-                        : "border-[var(--color-border)] bg-[var(--color-base)] hover:border-[var(--color-text-muted)]"
-                    }`}
-                  >
-                    <div className="flex w-full items-center justify-between mb-1.5">
-                      <span className="font-mono text-xs font-bold text-[var(--color-text-primary)]">{act.action}</span>
-                      {act.is_recommended && <ShieldCheck size={14} className="text-[var(--color-normal)]" />}
-                      {act.is_blocked_by_guardrail && <AlertTriangle size={14} className="text-[var(--color-critical)]" />}
-                    </div>
-                    <div className="font-mono text-[10px] text-[var(--color-text-muted)]">
-                      Cost: {act.operational_cost.toFixed(2)} | Red: -{(act.forecast_risk_reduction * 100).toFixed(0)}%
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Active Action Analysis */}
-            {activeMitigation && (
-              <div className="rounded-lg border p-4 bg-[var(--color-panel-raised)]" style={{ borderColor: "var(--color-border)" }}>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <span className="text-xs font-semibold text-[var(--color-accent)]">
-                    {activeMitigation.action}: {activeMitigation.description}
-                  </span>
-                  <div className="flex items-center gap-3 font-mono text-xs">
-                    <span className="text-[var(--color-text-muted)]">
-                      RISK REDUCTION: <strong className="text-[var(--color-normal)]">-{(activeMitigation.forecast_risk_reduction * 100).toFixed(1)}%</strong>
-                    </span>
-                    <span className="text-[var(--color-text-muted)]">
-                      COST: <strong className="text-[var(--color-elevated)]">{activeMitigation.operational_cost.toFixed(2)}</strong>
-                    </span>
-                  </div>
-                </div>
-
-                {activeMitigation.is_blocked_by_guardrail && activeMitigation.guardrail_reason && (
-                  <div className="mt-2 flex items-center gap-2 rounded border border-[var(--color-critical)]/40 bg-[var(--color-critical)]/10 p-2 text-xs text-[var(--color-critical)] font-mono">
-                    <AlertTriangle size={14} />
-                    <span>{activeMitigation.guardrail_reason}</span>
-                  </div>
-                )}
-
-                {/* Counterfactual trajectory comparison */}
-                <div className="mt-3 flex items-center gap-4 text-xs font-mono">
-                  <span className="text-[var(--color-text-muted)]">Mitigated K-Step Trajectory:</span>
-                  <div className="flex gap-2">
-                    {activeMitigation.counterfactual_trajectory.map((p, idx) => (
-                      <span
-                        key={idx}
-                        className={`rounded px-1.5 py-0.5 text-[11px] font-bold ${
-                          p < 0.3
-                            ? "bg-[var(--color-normal)]/20 text-[var(--color-normal)]"
-                            : p < 0.7
-                            ? "bg-[var(--color-watch)]/20 text-[var(--color-watch)]"
-                            : "bg-[var(--color-critical)]/20 text-[var(--color-critical)]"
-                        }`}
-                      >
-                        T+{idx + 1}: {(p * 100).toFixed(0)}%
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Interactive What-If Counterfactual Sandbox Panel */}
+          <DefenseSandboxPanel
+            mitigationData={mitigationData}
+            selectedAction={selectedAction}
+            onSelectAction={setSelectedAction}
+            onOpenDossier={() => setIsDossierOpen(true)}
+          />
         </div>
 
         {/* Right Column: Flagged Flows & Explainability */}
@@ -304,6 +251,17 @@ export function SimulationPage() {
 
       {/* Slide-in Explainability Drawer */}
       <ExplainabilityPanel point={selectedPoint} onClose={() => setSelectedPoint(null)} />
+
+      {/* 1-Click Sovereign Incident Dossier Modal */}
+      <IncidentDossierModal
+        isOpen={isDossierOpen}
+        onClose={() => setIsDossierOpen(false)}
+        scenarioName={currentSession?.name || "SSH / FTP Brute Force"}
+        hostIp={currentSession?.host_ip || "172.16.0.1"}
+        targetIp={currentSession?.target_ip || "192.168.10.50"}
+        predictedClass={currentSession?.ground_truth_label || "SSH-Patator"}
+        confidence={currentSession?.threat_trajectory ? currentSession.threat_trajectory.slice(-1)[0] : 0.98}
+      />
     </div>
   );
 }

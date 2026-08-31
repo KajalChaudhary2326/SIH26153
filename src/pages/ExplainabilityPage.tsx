@@ -11,6 +11,7 @@ import {
   Fingerprint,
 } from "lucide-react";
 import { getSampleSessions, type ScenarioSession } from "../data/api";
+import { TelemetryHeader } from "../components/TelemetryHeader";
 
 const SCENARIO_EXPLANATIONS: Record<
   string,
@@ -167,6 +168,7 @@ export function ExplainabilityPage() {
 
   return (
     <div className="w-full flex flex-col gap-8 pb-16">
+      <TelemetryHeader />
       {/* Top Header Card */}
       <motion.section
         initial={{ opacity: 0, y: 14 }}
