@@ -179,10 +179,10 @@ export async function getSampleSessions(): Promise<ScenarioSession[]> {
       ground_truth_label: "Bot",
       mitre_stage: 4,
       timesteps: 30,
-      threat_trajectory: [0.08, 0.12, 0.15, 0.22, 0.28, 0.35, 0.48, 0.62, 0.78, 0.92],
-      projected_k_steps: [0.94, 0.96, 0.97, 0.98, 0.99],
+      threat_trajectory: [0.06, 0.38, 0.12, 0.49, 0.18, 0.68, 0.25, 0.84, 0.42, 0.93],
+      projected_k_steps: [0.95, 0.96, 0.98, 0.98, 0.99],
       severity: "critical",
-      recommended_action: "RESET_CONNECTIONS",
+      recommended_action: "BLOCK_IP",
       state_vector_sample: [1.2, 0.8, -0.4, 2.1, 0.0, 1.5, -0.2, 0.9],
     },
     {
@@ -195,8 +195,8 @@ export async function getSampleSessions(): Promise<ScenarioSession[]> {
       ground_truth_label: "PortScan",
       mitre_stage: 1,
       timesteps: 25,
-      threat_trajectory: [0.05, 0.08, 0.14, 0.22, 0.38, 0.52, 0.68, 0.76],
-      projected_k_steps: [0.82, 0.86, 0.89, 0.92, 0.94],
+      threat_trajectory: [0.04, 0.08, 0.22, 0.18, 0.39, 0.35, 0.55, 0.52, 0.68, 0.74],
+      projected_k_steps: [0.77, 0.80, 0.83, 0.85, 0.87],
       severity: "elevated",
       recommended_action: "RATE_LIMIT",
       state_vector_sample: [0.1, 2.4, 1.8, -0.5, 0.0, 3.2, 1.1, -0.8],
@@ -211,8 +211,8 @@ export async function getSampleSessions(): Promise<ScenarioSession[]> {
       ground_truth_label: "DoS slowloris",
       mitre_stage: 5,
       timesteps: 28,
-      threat_trajectory: [0.04, 0.09, 0.18, 0.31, 0.49, 0.68, 0.81, 0.89],
-      projected_k_steps: [0.93, 0.95, 0.97, 0.98, 0.99],
+      threat_trajectory: [0.02, 0.02, 0.03, 0.04, 0.08, 0.25, 0.72, 0.96, 0.99, 1.0],
+      projected_k_steps: [1.0, 1.0, 1.0, 1.0, 1.0],
       severity: "critical",
       recommended_action: "RATE_LIMIT",
       state_vector_sample: [-0.8, -0.4, 2.9, 3.5, 0.0, -0.1, 0.0, 1.4],
@@ -227,10 +227,10 @@ export async function getSampleSessions(): Promise<ScenarioSession[]> {
       ground_truth_label: "SSH-Patator",
       mitre_stage: 2,
       timesteps: 30,
-      threat_trajectory: [0.06, 0.11, 0.22, 0.41, 0.63, 0.79, 0.88, 0.94],
-      projected_k_steps: [0.96, 0.98, 0.99, 0.99, 1.0],
+      threat_trajectory: [0.05, 0.15, 0.25, 0.38, 0.50, 0.62, 0.75, 0.85, 0.92, 0.96],
+      projected_k_steps: [0.97, 0.98, 0.99, 0.99, 1.0],
       severity: "critical",
-      recommended_action: "BLOCK_IP",
+      recommended_action: "RESET_CONNECTIONS",
       state_vector_sample: [0.5, 1.2, -0.9, 0.4, 2.8, 0.1, -0.3, 0.7],
     },
     {
@@ -243,8 +243,8 @@ export async function getSampleSessions(): Promise<ScenarioSession[]> {
       ground_truth_label: "BENIGN",
       mitre_stage: 0,
       timesteps: 30,
-      threat_trajectory: [0.01, 0.02, 0.01, 0.03, 0.02, 0.02, 0.03, 0.02],
-      projected_k_steps: [0.02, 0.02, 0.03, 0.02, 0.03],
+      threat_trajectory: [0.01, 0.02, 0.01, 0.02, 0.01, 0.03, 0.02, 0.01, 0.02, 0.02],
+      projected_k_steps: [0.02, 0.02, 0.02, 0.03, 0.02],
       severity: "normal",
       recommended_action: "NO_ACTION",
       state_vector_sample: [-0.2, -0.1, -0.3, -0.2, 0.0, -0.1, 0.0, -0.2],
@@ -259,7 +259,7 @@ export async function getSampleSessions(): Promise<ScenarioSession[]> {
       ground_truth_label: "Infiltration",
       mitre_stage: 3,
       timesteps: 35,
-      threat_trajectory: [0.05, 0.12, 0.35, 0.58, 0.72, 0.88, 0.95, 0.98, 0.99],
+      threat_trajectory: [0.03, 0.04, 0.03, 0.04, 0.05, 0.06, 0.14, 0.58, 0.89, 0.99],
       projected_k_steps: [0.99, 1.0, 1.0, 1.0, 1.0],
       severity: "critical",
       recommended_action: "BLOCK_IP",
@@ -283,7 +283,52 @@ export async function getIngestionStatus(ingestionId: string): Promise<Ingestion
 export async function getTimeline(ingestionId: string): Promise<TimelinePoint[]> {
   try {
     const sessions = await getSampleSessions();
-    const matched = sessions.find((s) => s.id === ingestionId) || sessions[0];
+    const cleanId = (ingestionId || "").toLowerCase();
+
+    // Intelligent exact and keyword matching
+    let matched = sessions.find((s) => s.id === ingestionId || s.name === ingestionId);
+
+    if (!matched) {
+      if (cleanId.includes("benign") || cleanId.includes("normal") || cleanId.startsWith("1_")) {
+        matched = sessions.find((s) => s.id === "sess_benign_normal");
+      } else if (cleanId.includes("portscan") || cleanId.includes("recon")) {
+        matched = sessions.find((s) => s.id === "sess_portscan_recon");
+      } else if (
+        cleanId.includes("scada") ||
+        cleanId.includes("modbus") ||
+        cleanId.includes("grid") ||
+        cleanId.includes("cii") ||
+        cleanId.startsWith("5_")
+      ) {
+        matched = sessions.find((s) => s.id === "session-scada-grid-exfiltration");
+      } else if (
+        cleanId.includes("dos") ||
+        cleanId.includes("ddos") ||
+        cleanId.includes("hulk") ||
+        cleanId.includes("slow") ||
+        cleanId.startsWith("4_")
+      ) {
+        matched = sessions.find((s) => s.id === "sess_slowloris_dos");
+      } else if (
+        cleanId.includes("bot") ||
+        cleanId.includes("ares") ||
+        cleanId.includes("c2") ||
+        cleanId.startsWith("2_")
+      ) {
+        matched = sessions.find((s) => s.id === "sess_bot_c2");
+      } else if (
+        cleanId.includes("ssh") ||
+        cleanId.includes("patator") ||
+        cleanId.includes("ftp") ||
+        cleanId.includes("brute") ||
+        cleanId.startsWith("3_")
+      ) {
+        matched = sessions.find((s) => s.id === "sess_ssh_patator");
+      }
+    }
+
+    matched = matched || sessions[0];
+
     const points: TimelinePoint[] = [];
     const baseTime = Date.now() - (matched.threat_trajectory.length + matched.projected_k_steps.length) * 10000;
 

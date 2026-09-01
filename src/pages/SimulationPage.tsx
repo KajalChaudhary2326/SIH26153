@@ -61,10 +61,10 @@ export function SimulationPage() {
   }, [activeIngestion, setActiveIngestion]);
 
   useEffect(() => {
-    const sessId = activeIngestion?.id || selectedSessionId;
+    const sessId = activeIngestion?.matchedScenarioId || activeIngestion?.id || selectedSessionId;
     setLoading(true);
 
-    const currentSess = sessions.find((s) => s.id === sessId);
+    const currentSess = sessions.find((s) => s.id === sessId || s.name === sessId) || sessions[0];
 
     Promise.all([
       getTimeline(sessId),
@@ -72,7 +72,7 @@ export function SimulationPage() {
       evaluateMitigationActions(sessId),
       getMitreReasoning({
         predicted_class: currentSess?.ground_truth_label || "SSH-Patator",
-        confidence: currentSess ? currentSess.threat_trajectory.slice(-1)[0] : 0.98,
+        confidence: currentSess && currentSess.threat_trajectory ? currentSess.threat_trajectory.slice(-1)[0] : 0.98,
         host_ip: currentSess?.host_ip || "172.16.0.1",
         target_ip: currentSess?.target_ip || "192.168.10.50",
       }),
@@ -84,7 +84,7 @@ export function SimulationPage() {
       setMitreReasoning(reason);
       setLoading(false);
     });
-  }, [activeIngestion?.id, selectedSessionId, replayKey, sessions]);
+  }, [activeIngestion?.id, activeIngestion?.matchedScenarioId, selectedSessionId, replayKey, sessions]);
 
   function handleSessionChange(id: string) {
     setSelectedSessionId(id);
@@ -97,6 +97,7 @@ export function SimulationPage() {
         datasetName: "cic-ids-2018",
         uploadedAt: new Date().toISOString(),
         status: "ready",
+        matchedScenarioId: found.id,
       });
     }
   }
