@@ -101,7 +101,7 @@ export function UploadPage() {
     if (fn.startsWith("4_") || fn.includes("ddos") || fn.includes("hulk") || fn.includes("slow") || fn.includes("dos")) return "sess_slowloris_dos";
     if (fn.startsWith("5_") || fn.includes("scada") || fn.includes("modbus") || fn.includes("grid") || fn.includes("cii")) return "session-scada-grid-exfiltration";
     if (fn.includes("portscan") || fn.includes("recon")) return "sess_portscan_recon";
-    return "sess_ssh_patator";
+    return filename;
   }
 
   async function beginProcessing(
