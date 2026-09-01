@@ -17,6 +17,7 @@ export default function App() {
             <Route path="/architecture" element={<ArchitecturePage />} />
 
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/dashboard/live" element={<DashboardPage />} />
             <Route path="/dashboard/simulation" element={<DashboardPage />} />
             <Route path="/dashboard/explainability" element={<DashboardPage />} />
             <Route path="/dashboard/baseline" element={<DashboardPage />} />

@@ -1,14 +1,16 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, BarChart3, Eye, Upload } from "lucide-react";
+import { Activity, BarChart3, Eye, Upload, Radio } from "lucide-react";
 import { UploadPage } from "./UploadPage";
 import { SimulationPage } from "./SimulationPage";
 import { ExplainabilityPage } from "./ExplainabilityPage";
 import { ComparePage } from "./ComparePage";
+import { LiveMonitorPage } from "./LiveMonitorPage";
 
 const tabs = [
   { to: "/dashboard", label: "Upload", icon: Upload, end: true },
-  { to: "/dashboard/simulation", label: "Live Simulation", icon: Activity },
+  { to: "/dashboard/live", label: "Live Sniffer", icon: Radio, highlight: true },
+  { to: "/dashboard/simulation", label: "Scenario Simulation", icon: Activity },
   { to: "/dashboard/explainability", label: "Explainability", icon: Eye },
   { to: "/dashboard/baseline", label: "Baseline Comparison", icon: BarChart3 },
 ];
@@ -18,6 +20,7 @@ export function DashboardPage() {
 
   const renderTabContent = () => {
     if (location.pathname === "/dashboard" || location.pathname === "/dashboard/") return <UploadPage />;
+    if (location.pathname === "/dashboard/live") return <LiveMonitorPage />;
     if (location.pathname === "/dashboard/simulation") return <SimulationPage />;
     if (location.pathname === "/dashboard/explainability") return <ExplainabilityPage />;
     if (location.pathname === "/dashboard/baseline") return <ComparePage />;
