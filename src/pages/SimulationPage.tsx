@@ -101,7 +101,8 @@ export function SimulationPage() {
     }
   }
 
-  const currentSession = sessions.find((s) => s.id === (activeIngestion?.id || selectedSessionId)) || sessions[0];
+  const targetSessionId = activeIngestion?.matchedScenarioId || activeIngestion?.id || selectedSessionId;
+  const currentSession = sessions.find((s) => s.id === targetSessionId) || sessions[0];
   const latestObserved = [...timeline].filter((p) => !p.isProjection).slice(-1)[0];
   const projectedPoints = timeline.filter((p) => p.isProjection);
   const isCritical =

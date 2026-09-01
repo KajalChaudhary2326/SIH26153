@@ -249,6 +249,22 @@ export async function getSampleSessions(): Promise<ScenarioSession[]> {
       recommended_action: "NO_ACTION",
       state_vector_sample: [-0.2, -0.1, -0.3, -0.2, 0.0, -0.1, 0.0, -0.2],
     },
+    {
+      id: "session-scada-grid-exfiltration",
+      name: "NCIIPC Power Grid Substation Intrusion",
+      host_ip: "10.0.100.42",
+      target_ip: "10.0.100.1",
+      target_service: "TCP/502 (Modbus Gateway)",
+      scenario: "Unauthorized ICS coil read/write bursts on critical infrastructure",
+      ground_truth_label: "Infiltration",
+      mitre_stage: 3,
+      timesteps: 35,
+      threat_trajectory: [0.05, 0.12, 0.35, 0.58, 0.72, 0.88, 0.95, 0.98, 0.99],
+      projected_k_steps: [0.99, 1.0, 1.0, 1.0, 1.0],
+      severity: "critical",
+      recommended_action: "BLOCK_IP",
+      state_vector_sample: [3.4, -0.8, 1.2, 2.7, 0.1, -0.5, 4.0, 0.8],
+    },
   ];
 }
 

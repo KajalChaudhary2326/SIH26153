@@ -95,12 +95,12 @@ export function UploadPage() {
 
   function detectScenarioId(filename: string): string {
     const fn = filename.toLowerCase();
-    if (fn.includes("benign") || fn.includes("normal")) return "sess_benign_normal";
+    if (fn.startsWith("1_") || fn.includes("benign") || fn.includes("normal")) return "sess_benign_normal";
+    if (fn.startsWith("2_") || fn.includes("bot") || fn.includes("ares") || fn.includes("c2")) return "sess_bot_c2";
+    if (fn.startsWith("3_") || fn.includes("ssh") || fn.includes("patator") || fn.includes("ftp") || fn.includes("brute")) return "sess_ssh_patator";
+    if (fn.startsWith("4_") || fn.includes("ddos") || fn.includes("hulk") || fn.includes("slow") || fn.includes("dos")) return "sess_slowloris_dos";
+    if (fn.startsWith("5_") || fn.includes("scada") || fn.includes("modbus") || fn.includes("grid") || fn.includes("cii")) return "session-scada-grid-exfiltration";
     if (fn.includes("portscan") || fn.includes("recon")) return "sess_portscan_recon";
-    if (fn.includes("bot") || fn.includes("ares") || fn.includes("c2")) return "sess_bot_c2";
-    if (fn.includes("ddos") || fn.includes("hulk") || fn.includes("slow")) return "sess_slowloris_dos";
-    if (fn.includes("scada") || fn.includes("modbus") || fn.includes("grid")) return "session-scada-grid-exfiltration";
-    if (fn.includes("ssh") || fn.includes("patator") || fn.includes("ftp") || fn.includes("brute")) return "sess_ssh_patator";
     return "sess_ssh_patator";
   }
 
