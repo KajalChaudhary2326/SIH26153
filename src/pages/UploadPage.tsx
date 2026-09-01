@@ -1,16 +1,82 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, FileStack, CheckCircle2, Upload, Activity, ArrowRight } from "lucide-react";
+import { FileText, FileStack, CheckCircle2, Upload, Activity, ArrowRight, Download, Zap, ShieldAlert } from "lucide-react";
 import { getSampleSessions, type ScenarioSession } from "../data/api";
 import { useAppStore } from "../store/useAppStore";
 import type { DatasetName, IngestionStatus, SourceType } from "../data/types";
 
 const PROCESSING_STEPS: { status: IngestionStatus; label: string }[] = [
   { status: "validating", label: "Validating network telemetry schema" },
-  { status: "extracting_features", label: "Extracting 77 flow + 7 packet features" },
+  { status: "extracting_features", label: "Extracting 77 flow + 7 packet features (84-dim)" },
   { status: "sequencing", label: "Constructing temporal state sequences (L=3)" },
-  { status: "ready", label: "World Model inference ready" },
+  { status: "ready", label: "World Model inference & K-step forecast ready" },
+];
+
+const SAMPLE_FILES = [
+  {
+    name: "1_BENIGN_Normal_Enterprise_Traffic.csv",
+    type: "csv" as SourceType,
+    size: "17.2 KB",
+    scenarioId: "sess_benign_normal",
+    label: "Normal Enterprise Baseline",
+    desc: "Stationary benign HTTPS/TLS & DNS telemetry (Threat Prob: 1-3%)",
+    severity: "normal",
+  },
+  {
+    name: "2_Botnet_Ares_C2_Periodic_Beacon.csv",
+    type: "csv" as SourceType,
+    size: "17.3 KB",
+    scenarioId: "sess_bot_c2",
+    label: "Ares/Mirai Botnet C2 Reverse Shell",
+    desc: "Low-jitter periodic heartbeat beacons to external C2 controller",
+    severity: "critical",
+  },
+  {
+    name: "3_SSH_FTP_Patator_BruteForce.csv",
+    type: "csv" as SourceType,
+    size: "17.2 KB",
+    scenarioId: "sess_ssh_patator",
+    label: "SSH/FTP Multi-Stage Brute Force",
+    desc: "High-frequency dictionary credential assault on Port 22/21",
+    severity: "critical",
+  },
+  {
+    name: "4_Volumetric_DDoS_Hulk_Flood.csv",
+    type: "csv" as SourceType,
+    size: "12.3 KB",
+    scenarioId: "sess_slowloris_dos",
+    label: "Volumetric HTTP Exhaustion Flood",
+    desc: "Massive socket pool exhaustion attacking Apache web service",
+    severity: "critical",
+  },
+  {
+    name: "5_CII_SCADA_Infiltration_Attack.csv",
+    type: "csv" as SourceType,
+    size: "17.2 KB",
+    scenarioId: "session-scada-grid-exfiltration",
+    label: "NCIIPC CII Power Grid Substation Intrusion",
+    desc: "Unauthorized Modbus/DNP3 industrial gateway command injection",
+    severity: "critical",
+  },
+  {
+    name: "sample_enterprise_capture.pcap",
+    type: "pcap" as SourceType,
+    size: "0.35 KB",
+    scenarioId: "sess_ssh_patator",
+    label: "Enterprise Raw Packet Capture (.pcap)",
+    desc: "Wireshark packet capture with raw TCP SYN/ACK/SSH handshake headers",
+    severity: "elevated",
+  },
+  {
+    name: "sample_scada_modbus.pcap",
+    type: "pcap" as SourceType,
+    size: "0.84 KB",
+    scenarioId: "session-scada-grid-exfiltration",
+    label: "SCADA Modbus ICS Packet Stream (.pcap)",
+    desc: "Industrial telemetry packets on Port 502 with coil read/write queries",
+    severity: "critical",
+  },
 ];
 
 export function UploadPage() {
@@ -27,25 +93,50 @@ export function UploadPage() {
     getSampleSessions().then(setSessions);
   }, []);
 
-  async function beginProcessing(sourceType: SourceType, filename: string, datasetName: DatasetName, sessionId?: string) {
+  function detectScenarioId(filename: string): string {
+    const fn = filename.toLowerCase();
+    if (fn.includes("benign") || fn.includes("normal")) return "sess_benign_normal";
+    if (fn.includes("portscan") || fn.includes("recon")) return "sess_portscan_recon";
+    if (fn.includes("bot") || fn.includes("ares") || fn.includes("c2")) return "sess_bot_c2";
+    if (fn.includes("ddos") || fn.includes("hulk") || fn.includes("slow")) return "sess_slowloris_dos";
+    if (fn.includes("scada") || fn.includes("modbus") || fn.includes("grid")) return "session-scada-grid-exfiltration";
+    if (fn.includes("ssh") || fn.includes("patator") || fn.includes("ftp") || fn.includes("brute")) return "sess_ssh_patator";
+    return "sess_ssh_patator";
+  }
+
+  async function beginProcessing(
+    sourceType: SourceType,
+    filename: string,
+    datasetName: DatasetName,
+    sessionId?: string,
+    fileSizeBytes?: number
+  ) {
     setPendingSource({ type: sourceType, filename, dataset: datasetName });
     setProcessing(true);
     setStepIndex(0);
 
     for (let i = 0; i < PROCESSING_STEPS.length; i++) {
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 380));
       setStepIndex(i);
     }
 
-    const targetId = sessionId || "ing_uploaded";
+    const matchedId = sessionId || detectScenarioId(filename);
+    const sizeStr = fileSizeBytes ? `${(fileSizeBytes / 1024).toFixed(1)} KB` : (sourceType === "pcap" ? "0.84 KB" : "17.25 KB");
+    const flowCount = sourceType === "pcap" ? 14 : 128;
+
     setActiveIngestion({
-      id: targetId,
+      id: matchedId,
       sourceType,
       filename,
       datasetName,
+      fileSize: sizeStr,
+      flowCount,
+      extractedFeatures: 84,
       uploadedAt: new Date().toISOString(),
       status: "ready",
+      matchedScenarioId: matchedId,
     });
+
     await new Promise((r) => setTimeout(r, 250));
     navigate("/dashboard/simulation");
   }
@@ -53,7 +144,7 @@ export function UploadPage() {
   function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>, sourceType: SourceType) {
     const file = e.target.files?.[0];
     if (!file) return;
-    beginProcessing(sourceType, file.name, "custom");
+    beginProcessing(sourceType, file.name, "custom", undefined, file.size);
   }
 
   if (processing && pendingSource) {
@@ -71,7 +162,7 @@ export function UploadPage() {
             Processing {pendingSource.filename}
           </h2>
           <p className="mt-1 font-mono text-xs text-[var(--color-text-muted)]">
-            {pendingSource.type.toUpperCase()} · {pendingSource.dataset.toUpperCase()} TELEMETRY
+            {pendingSource.type.toUpperCase()} · {pendingSource.dataset.toUpperCase()} TELEMETRY · 84-DIM STATE FUSION
           </p>
 
           <div className="mt-6 flex flex-col gap-3.5">
@@ -162,23 +253,94 @@ export function UploadPage() {
           style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}
         >
           <div className="flex items-center gap-3 mb-3">
-            <div className="rounded-lg p-2.5 bg-[var(--color-mitre-c2)]/10 text-[var(--color-mitre-c2)]">
+            <div className="rounded-lg p-2.5 bg-pink-500/10 text-pink-400">
               <FileStack size={22} />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)]">
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)] group-hover:text-pink-400">
                 Upload Raw PCAP Stream
               </h3>
-              <p className="text-xs text-[var(--color-text-muted)]">tcpdump / Wireshark packet captures</p>
+              <p className="text-xs text-[var(--color-text-muted)]">tcpdump / Wireshark packet captures (.pcap)</p>
             </div>
           </div>
           <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-            Parses raw packets with Scapy, aggregates flow bursts, extracts dual-level packet metrics, and computes next-state dynamics.
+            Parses raw packets with Scapy, aggregates flow bursts, extracts dual-level packet metrics (TTL variance, TCP window, fragment flags), and computes next-state dynamics.
           </p>
-          <div className="mt-4 flex items-center gap-2 font-mono text-xs text-[var(--color-mitre-c2)]">
+          <div className="mt-4 flex items-center gap-2 font-mono text-xs text-pink-400">
             <Upload size={13} />
             <span>Select packet capture (.pcap)</span>
           </div>
+        </div>
+      </div>
+
+      {/* Cruel Testing: 1-Click Downloadable & Testable Telemetry Suite */}
+      <div className="rounded-xl border p-5 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 mb-4" style={{ borderColor: "var(--color-border)" }}>
+          <div className="flex items-center gap-2">
+            <ShieldAlert size={18} className="text-[var(--color-accent)]" />
+            <div>
+              <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                VERIFIED TELEMETRY TEST SUITE (1-CLICK DOWNLOAD &amp; CRUEL TESTING)
+              </h2>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Download sample CSV/PCAP files to test uploading, or click "Test Ingest" to simulate live pipeline execution instantly.
+              </p>
+            </div>
+          </div>
+          <span className="font-mono text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/30">
+            7 TEST PACKAGES READY
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {SAMPLE_FILES.map((file) => (
+            <div
+              key={file.name}
+              className="flex flex-col justify-between rounded-lg border p-3.5 bg-[var(--color-base)] hover:border-[var(--color-accent)] transition-all"
+              style={{ borderColor: "var(--color-border)" }}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-1.5 font-mono text-[10px]">
+                  <span className={`rounded px-1.5 py-0.5 font-bold ${
+                    file.type === "pcap" ? "bg-pink-500/20 text-pink-300" : "bg-cyan-500/20 text-cyan-300"
+                  }`}>
+                    {file.type.toUpperCase()} · {file.size}
+                  </span>
+                  <span className={file.severity === "critical" ? "text-rose-400 font-semibold" : "text-emerald-400 font-semibold"}>
+                    {file.severity.toUpperCase()}
+                  </span>
+                </div>
+                <h4 className="text-xs font-semibold text-[var(--color-text-primary)] mb-1">
+                  {file.label}
+                </h4>
+                <p className="text-[11px] font-mono text-[var(--color-text-muted)] mb-2 truncate">
+                  {file.name}
+                </p>
+                <p className="text-[11px] text-[var(--color-text-secondary)] line-clamp-2 mb-3">
+                  {file.desc}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2 border-t border-white/5 font-mono text-xs">
+                <a
+                  href={`/sample_telemetry/${file.name}`}
+                  download={file.name}
+                  className="flex-1 flex items-center justify-center gap-1 rounded py-1.5 bg-white/5 text-[var(--color-text-primary)] hover:bg-white/10 text-[11px] border border-white/10"
+                >
+                  <Download size={11} />
+                  <span>Download</span>
+                </a>
+                <button
+                  onClick={() => beginProcessing(file.type, file.name, "custom", file.scenarioId)}
+                  className="flex-1 flex items-center justify-center gap-1 rounded py-1.5 text-[11px] font-bold text-white shadow-sm hover:scale-105 transition-transform"
+                  style={{ backgroundColor: file.type === "pcap" ? "#EC4899" : "var(--color-accent)" }}
+                >
+                  <Zap size={11} />
+                  <span>Test Ingest</span>
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

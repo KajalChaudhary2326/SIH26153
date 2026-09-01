@@ -18,6 +18,10 @@ export interface Ingestion {
   datasetName: DatasetName;
   uploadedAt: string; // ISO timestamp
   status: IngestionStatus;
+  fileSize?: string;
+  flowCount?: number;
+  extractedFeatures?: number;
+  matchedScenarioId?: string;
 }
 
 export interface TimeWindow {

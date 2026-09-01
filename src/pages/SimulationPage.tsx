@@ -7,6 +7,7 @@ import { MITREStageBadge } from "../components/MITREStageBadge";
 import { ExplainabilityPanel } from "../components/ExplainabilityPanel";
 import { ExportButton } from "../components/ExportButton";
 import { TelemetryHeader } from "../components/TelemetryHeader";
+import { ActiveIngestionBanner } from "../components/ActiveIngestionBanner";
 import { MitreLifecycleTimeline } from "../components/MitreLifecycleTimeline";
 import { DefenseSandboxPanel } from "../components/DefenseSandboxPanel";
 import { IncidentDossierModal } from "../components/IncidentDossierModal";
@@ -112,6 +113,14 @@ export function SimulationPage() {
       {/* Sovereign Telemetry Header */}
       <TelemetryHeader />
 
+      {/* Active Ingested File Banner */}
+      <ActiveIngestionBanner
+        ingestion={activeIngestion}
+        scenarioName={currentSession?.name}
+        hostIp={currentSession?.host_ip}
+        targetIp={currentSession?.target_ip}
+      />
+
       {/* Top Header & Scenario Selector */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3">
@@ -127,6 +136,11 @@ export function SimulationPage() {
               borderColor: "var(--color-border)"
             }}
           >
+            {activeIngestion && (
+              <option value={activeIngestion.id}>
+                📁 [INGESTED FILE] {activeIngestion.filename} ({activeIngestion.sourceType.toUpperCase()})
+              </option>
+            )}
             {sessions.map((sess) => (
               <option key={sess.id} value={sess.id}>
                 [{sess.severity.toUpperCase()}] {sess.name} ({sess.host_ip})
@@ -161,16 +175,16 @@ export function SimulationPage() {
       {currentSession && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-xl border p-3.5 font-mono text-xs text-[var(--color-text-secondary)]" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel-raised)" }}>
           <div>
-            <span className="text-[var(--color-text-muted)]">HOST IP: </span>
+            <span className="text-[var(--color-text-muted)]">ACTIVE FILE: </span>
+            <span className="text-emerald-400 font-bold truncate">{activeIngestion?.filename || currentSession.name}</span>
+          </div>
+          <div>
+            <span className="text-[var(--color-text-muted)]">ADVERSARY HOST: </span>
             <span className="text-[var(--color-accent)]">{currentSession.host_ip}</span>
           </div>
           <div>
-            <span className="text-[var(--color-text-muted)]">TARGET IP: </span>
+            <span className="text-[var(--color-text-muted)]">TARGET CII ASSET: </span>
             <span className="text-[var(--color-text-primary)]">{currentSession.target_ip}</span>
-          </div>
-          <div>
-            <span className="text-[var(--color-text-muted)]">SERVICE: </span>
-            <span className="text-[var(--color-text-primary)]">{currentSession.target_service}</span>
           </div>
           <div>
             <span className="text-[var(--color-text-muted)]">GROUND TRUTH: </span>
