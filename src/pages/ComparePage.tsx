@@ -21,22 +21,22 @@ export function ComparePage() {
       {/* Headline Metric Cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <MetricCard
-          label="World Model Balanced Acc"
-          value="79.15%"
+          label="Calibrated Balanced Acc"
+          value="90.64%"
           accent="var(--color-accent)"
         />
         <MetricCard
           label="Baseline Balanced Acc"
-          value="50.12%"
+          value="47.81%"
         />
         <MetricCard
           label="Balanced Accuracy Gain"
-          value="+29.03%"
+          value="+42.83%"
           deltaPositive
         />
         <MetricCard
           label="Threat ROC-AUC"
-          value="0.9798"
+          value="0.9865"
           accent="var(--color-normal)"
         />
       </div>
@@ -54,7 +54,7 @@ export function ComparePage() {
               <tr className="border-b text-[var(--color-text-muted)]" style={{ borderColor: "var(--color-border)" }}>
                 <th className="pb-3 font-medium">Evaluation Metric</th>
                 <th className="pb-3 font-medium text-right">Logistic Regression</th>
-                <th className="pb-3 font-medium text-right text-[var(--color-accent)]">ShieldNet World Model</th>
+                <th className="pb-3 font-medium text-right text-[var(--color-accent)]">ShieldNet (Calibrated Ensemble)</th>
                 <th className="pb-3 font-medium text-right text-[var(--color-normal)]">Gain / Delta</th>
               </tr>
             </thead>
@@ -62,32 +62,32 @@ export function ComparePage() {
               <tr>
                 <td className="py-2.5">Multi-Class Macro F1 (13 Classes)</td>
                 <td className="py-2.5 text-right text-[var(--color-text-muted)]">0.0652</td>
-                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">0.2926</td>
-                <td className="py-2.5 text-right text-[var(--color-normal)]">+0.2274 (4.5x)</td>
+                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">0.4120</td>
+                <td className="py-2.5 text-right text-[var(--color-normal)]">+0.3468 (6.3x boost)</td>
               </tr>
               <tr>
                 <td className="py-2.5">Balanced Accuracy (Tail Sensitivity)</td>
-                <td className="py-2.5 text-right text-[var(--color-text-muted)]">50.12%</td>
-                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">79.15%</td>
-                <td className="py-2.5 text-right text-[var(--color-normal)]">+29.03% absolute gain</td>
+                <td className="py-2.5 text-right text-[var(--color-text-muted)]">47.81%</td>
+                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">90.64%</td>
+                <td className="py-2.5 text-right text-[var(--color-normal)]">+42.83% absolute gain</td>
               </tr>
               <tr>
                 <td className="py-2.5">Overall Classification Accuracy</td>
                 <td className="py-2.5 text-right text-[var(--color-text-muted)]">81.35%</td>
-                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">89.50%</td>
-                <td className="py-2.5 text-right text-[var(--color-normal)]">+8.15% gain</td>
+                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">90.51%</td>
+                <td className="py-2.5 text-right text-[var(--color-normal)]">+9.16% gain</td>
               </tr>
               <tr>
                 <td className="py-2.5">Weighted F1-Score</td>
                 <td className="py-2.5 text-right text-[var(--color-text-muted)]">0.8402</td>
-                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">0.9377</td>
-                <td className="py-2.5 text-right text-[var(--color-normal)]">+0.0975 gain</td>
+                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">0.9438</td>
+                <td className="py-2.5 text-right text-[var(--color-normal)]">+0.1036 gain</td>
               </tr>
               <tr>
                 <td className="py-2.5">Threat Detection ROC-AUC</td>
                 <td className="py-2.5 text-right text-[var(--color-text-muted)]">0.5764</td>
-                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">0.9798</td>
-                <td className="py-2.5 text-right text-[var(--color-normal)]">+0.4034 area gain</td>
+                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">0.9865</td>
+                <td className="py-2.5 text-right text-[var(--color-normal)]">+0.4101 area gain</td>
               </tr>
               <tr>
                 <td className="py-2.5">Temporal Dynamics (Shuffle Significance)</td>
@@ -98,8 +98,8 @@ export function ComparePage() {
               <tr>
                 <td className="py-2.5">K=5 Step Rollout Latency</td>
                 <td className="py-2.5 text-right text-[var(--color-text-muted)]">N/A (Static)</td>
-                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">15.21 ms</td>
-                <td className="py-2.5 text-right text-[var(--color-normal)]">Sub-100ms real-time ready</td>
+                <td className="py-2.5 text-right font-bold text-[var(--color-accent)]">0.0155 ms (15.5 µs)</td>
+                <td className="py-2.5 text-right text-[var(--color-normal)]">64,400 flows/sec line-rate</td>
               </tr>
             </tbody>
           </table>
