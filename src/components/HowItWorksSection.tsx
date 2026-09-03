@@ -291,34 +291,37 @@ export function HowItWorksSection() {
   const steps: StepProps[] = [
     {
       number: "01",
-      title: "Ingest",
-      description: "Load telemetry from CSV or PCAP sources to build a local risk timeline.",
-      inputLabel: "Input: Flows, Packets, Logs",
-      inputItems: ["CSV", "PCAP", "Local Data"],
+      title: "Dual-Scale Telemetry Ingestion",
+      description: "Extracts micro-packet dynamics (inter-arrival jitter, packet lengths) and macro-flow metrics into an 84-dimensional canonical state S_t with FrozenReferenceScalerGuard.",
+      inputLabel: "Telemetry Ingestion & State Space",
+      inputItems: ["Raw PCAP", "NetFlow CSV", "84-Dim State S_t"],
       visualization: "flow",
       index: 0,
     },
     {
       number: "02",
-      title: "Learn Temporal Behavior",
-      description: "Model the sequence and timing of packets, ports, and flows over time.",
-      inputLabel: "AI Model: World Model Core",
+      title: "Recurrent State-Space World Model",
+      description: "A 2-layer GRU backbone augmented with Multi-Head Temporal Self-Attention learns continuous state transition dynamics P(S_{t+1}|S_t) across 30s historical windows.",
+      inputLabel: "Neural World Model Core",
+      inputItems: ["2-Layer GRU", "Self-Attention", "State Transition P(S_{t+1}|S_t)"],
       visualization: "temporal",
       index: 1,
     },
     {
       number: "03",
-      title: "Forecast",
-      description: "Project the next K windows and surface rising attack probability early.",
-      inputLabel: "Output: Risk Score & Alert",
+      title: "K-Step Forward Horizon Rollout",
+      description: "Autoregressively projects latent network states 50 seconds ahead (K=5), forecasting rising threat probability and mapping trajectories to MITRE ATT&CK lifecycle stages.",
+      inputLabel: "Pre-Emptive Latent Simulation",
+      inputItems: ["Horizon Rollout K=5", "MITRE Lifecycle", "Threat Forecast P(Attack)"],
       visualization: "risk",
       index: 2,
     },
     {
       number: "04",
-      title: "Explain & Map",
-      description: "Explain why it's risky and map the prediction to MITRE ATT&CK tactics.",
-      inputLabel: "Action: Investigate & Respond",
+      title: "SHAP Explainability & Defense Sandbox",
+      description: "Decomposes forecasts into exact signed SHAP feature attributions (ϕ_i) and runs 'What-If' counterfactual policy simulations before deploying 1-click firewall containment.",
+      inputLabel: "Axiomatic Attribution & Containment",
+      inputItems: ["SHAP (ϕ_i)", "What-If Sandbox", "1-Click iptables / netsh"],
       visualization: "mapping",
       index: 3,
     },
@@ -343,13 +346,13 @@ export function HowItWorksSection() {
       >
         <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-[var(--color-text-secondary)] mb-4">
           <Gauge size={14} style={{ color: "var(--color-accent)" }} />
-          How It Works
+          How ShieldNet Operates
         </div>
         <h2 className="text-4xl sm:text-5xl font-semibold tracking-tight text-[var(--color-text-primary)] mb-3">
-          From Raw Telemetry to Prediction
+          From Raw Telemetry to Pre-Emptive Sovereign Defense
         </h2>
-        <p className="text-lg text-[var(--color-text-secondary)] max-w-2xl leading-relaxed">
-          From raw network telemetry to early attack prediction in 4 simple steps.
+        <p className="text-lg text-[var(--color-text-secondary)] max-w-3xl leading-relaxed">
+          The 4 core stages of ShieldNet: Dual-scale packet ingestion, recurrent state-space World Modeling, K-step forward latent forecasting, and axiomatic SHAP explainability with automated firewall containment.
         </p>
       </motion.div>
 

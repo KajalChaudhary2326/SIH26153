@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RotateCcw, Activity, FileText } from "lucide-react";
+import { RotateCcw, Activity, FileText, Sparkles } from "lucide-react";
 import { ProbabilityTimeline } from "../components/ProbabilityTimeline";
 import { KStepProjection } from "../components/KStepProjection";
 import { FlaggedFlowsList } from "../components/FlaggedFlowsList";
@@ -11,6 +11,7 @@ import { ActiveIngestionBanner } from "../components/ActiveIngestionBanner";
 import { MitreLifecycleTimeline } from "../components/MitreLifecycleTimeline";
 import { DefenseSandboxPanel } from "../components/DefenseSandboxPanel";
 import { IncidentDossierModal } from "../components/IncidentDossierModal";
+import { ShapExplanationCard } from "../components/ShapExplanationCard";
 import {
   getTimeline,
   getFlaggedFlows,
@@ -217,9 +218,19 @@ export function SimulationPage() {
               <span className="font-mono text-xs tracking-wider text-[var(--color-text-secondary)]">
                 THREAT INFILTRATION PROBABILITY P(Attack) &amp; K-STEP FORWARD ROLLOUT
               </span>
-              <span className="font-mono text-xs text-[var(--color-accent)]">
-                {isCritical ? "CRITICAL RISK ELEVATION" : "NORMAL DYNAMICS"}
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => document.getElementById("shap-explanation-section")?.scrollIntoView({ behavior: "smooth" })}
+                  className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[10px] font-semibold text-[var(--color-accent)] border-[var(--color-accent)]/40 hover:bg-[var(--color-accent)]/15 transition-all shadow-sm"
+                  title="Jump to SHAP Feature Attribution Breakdown"
+                >
+                  <Sparkles size={12} className="animate-pulse text-[var(--color-accent)]" />
+                  <span>Inspect SHAP Attribution ↓</span>
+                </button>
+                <span className="font-mono text-xs text-[var(--color-accent)]">
+                  {isCritical ? "CRITICAL RISK ELEVATION" : "NORMAL DYNAMICS"}
+                </span>
+              </div>
             </div>
 
             {loading ? (
@@ -244,6 +255,18 @@ export function SimulationPage() {
             />
           )}
 
+          {/* Dynamic Scenario-Specific SHAP Feature Attribution (Immediately explains the graph!) */}
+          <ShapExplanationCard
+            sessionId={currentSession?.id}
+            filename={activeIngestion?.filename}
+            currentProbability={currentSession?.threat_trajectory?.slice(-1)[0] ?? 0.88}
+            onOpenDetailedDrawer={() => {
+              if (timeline.length > 0) {
+                setSelectedPoint(timeline[timeline.length - 1]);
+              }
+            }}
+          />
+
           {/* Interactive What-If Counterfactual Sandbox Panel */}
           <DefenseSandboxPanel
             mitigationData={mitigationData}
@@ -256,7 +279,7 @@ export function SimulationPage() {
           />
         </div>
 
-        {/* Right Column: Flagged Flows & Always-Visible SHAP Attribution */}
+        {/* Right Column: Flagged Flows */}
         <div className="flex flex-col gap-6">
           <div className="rounded-xl border p-4 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
             <FlaggedFlowsList
@@ -264,72 +287,6 @@ export function SimulationPage() {
               filter={severityFilter}
               onFilterChange={setSeverityFilter}
             />
-          </div>
-
-          {/* Always-Visible SHAP Feature Attribution Panel */}
-          <div className="rounded-xl border p-4 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
-            <div className="flex items-center justify-between mb-3 border-b pb-2" style={{ borderColor: "var(--color-border)" }}>
-              <div className="flex items-center gap-2">
-                <Activity size={14} className="text-[var(--color-accent)]" />
-                <span className="font-mono text-xs font-semibold text-[var(--color-text-primary)]">
-                  SHAP FEATURE EXPLAINABILITY
-                </span>
-              </div>
-              <span className="font-mono text-[10px] text-[var(--color-accent)]">
-                Local Attribution (ϕ_i)
-              </span>
-            </div>
-
-            <p className="text-[11px] text-[var(--color-text-secondary)] mb-3 leading-relaxed">
-              Top network telemetry channels driving this forecast's {((currentSession?.threat_trajectory?.slice(-1)[0] ?? 0.88) * 100).toFixed(0)}% infiltration probability:
-            </p>
-
-            <div className="space-y-3 font-mono text-xs">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[var(--color-text-primary)] text-[11px]">Flow IAT Std (Timing Jitter)</span>
-                  <span className="text-[var(--color-critical)] font-bold">+0.420</span>
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-[var(--color-panel-raised)] overflow-hidden">
-                  <div className="h-full rounded-full bg-[var(--color-critical)]" style={{ width: "85%" }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[var(--color-text-primary)] text-[11px]">Bwd Packet Length Mean</span>
-                  <span className="text-[var(--color-critical)] font-bold">+0.284</span>
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-[var(--color-panel-raised)] overflow-hidden">
-                  <div className="h-full rounded-full bg-[var(--color-critical)]" style={{ width: "62%" }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[var(--color-text-primary)] text-[11px]">SYN / ACK Asymmetry Ratio</span>
-                  <span className="text-[var(--color-critical)] font-bold">+0.160</span>
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-[var(--color-panel-raised)] overflow-hidden">
-                  <div className="h-full rounded-full bg-[var(--color-critical)]" style={{ width: "40%" }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[var(--color-text-primary)] text-[11px]">Port Entropy (Variance)</span>
-                  <span className="text-[var(--color-normal)] font-bold">-0.082</span>
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-[var(--color-panel-raised)] overflow-hidden">
-                  <div className="h-full rounded-full bg-[var(--color-normal)]" style={{ width: "25%" }} />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-2.5 border-t flex items-center justify-between font-mono text-[11px] text-[var(--color-text-muted)]" style={{ borderColor: "var(--color-border)" }}>
-              <span>Sum(SHAP) = ΔP(Threat)</span>
-              <span className="text-emerald-400 font-semibold">Axiom Validated</span>
-            </div>
           </div>
         </div>
       </div>
