@@ -1,4 +1,4 @@
-import { ShieldAlert, Zap, FileText } from "lucide-react";
+import { Zap, FileText, ShieldCheck } from "lucide-react";
 import type { MitigationResponse } from "../data/api";
 
 interface DefenseSandboxPanelProps {
@@ -6,134 +6,268 @@ interface DefenseSandboxPanelProps {
   selectedAction: string;
   onSelectAction: (actionName: string) => void;
   onOpenDossier: () => void;
+  scenarioName?: string;
+  hostIp?: string;
+  targetIp?: string;
 }
+
+interface ActionProfile {
+  name: string;
+  label: string;
+  riskReduction: number;
+  residualRisk: number;
+  cost: number;
+  trajectory: number[];
+  commandPreview: string;
+  explanation: string;
+}
+
+const ACTION_PROFILES: Record<string, ActionProfile> = {
+  ISOLATE_HOST: {
+    name: "ISOLATE_HOST",
+    label: "Quarantine Host (VLAN Isolation)",
+    riskReduction: 0.94,
+    residualRisk: 0.03,
+    cost: 0.40,
+    trajectory: [0.88, 0.45, 0.12, 0.05, 0.03],
+    commandPreview: "iptables -I FORWARD -s {HOST_IP} -j DROP && netsh advfirewall set allprofiles state on",
+    explanation: "Sever all Layer 3 routing for adversary host. Completely halts lateral movement and C2 beaconing within 500ms."
+  },
+  BLOCK_PORT: {
+    name: "BLOCK_PORT",
+    label: "Block Targeted Port (ACL Severance)",
+    riskReduction: 0.85,
+    residualRisk: 0.09,
+    cost: 0.20,
+    trajectory: [0.88, 0.58, 0.28, 0.14, 0.09],
+    commandPreview: "iptables -A INPUT -p tcp --dport {PORT} -j REJECT --reject-with tcp-reset",
+    explanation: "Drops incoming packets on targeted destination port. Nullifies service exploitation while preserving other host traffic."
+  },
+  RATE_LIMIT: {
+    name: "RATE_LIMIT",
+    label: "Dynamic Token Bucket Rate Limiting",
+    riskReduction: 0.68,
+    residualRisk: 0.22,
+    cost: 0.15,
+    trajectory: [0.88, 0.72, 0.50, 0.32, 0.22],
+    commandPreview: "tc qdisc add dev eth0 root tbf rate 256kbit latency 50ms burst 1540",
+    explanation: "Clamps bandwidth and packet velocity. Effective for volumetric DDoS (Hulk/LOIC) and aggressive port-scanning."
+  },
+  RESET_CONNECTIONS: {
+    name: "RESET_CONNECTIONS",
+    label: "TCP RST Packet Injection",
+    riskReduction: 0.74,
+    residualRisk: 0.18,
+    cost: 0.10,
+    trajectory: [0.88, 0.62, 0.38, 0.24, 0.18],
+    commandPreview: "tcpkill -i eth0 host {HOST_IP} and port {PORT}",
+    explanation: "Injects synthetic TCP RST flags to tear down active 3-way handshakes and interrupt unauthorized data exfiltration."
+  },
+  MONITOR_ONLY: {
+    name: "MONITOR_ONLY",
+    label: "Passive Sovereign Observation",
+    riskReduction: 0.00,
+    residualRisk: 0.99,
+    cost: 0.00,
+    trajectory: [0.88, 0.92, 0.96, 0.98, 0.99],
+    commandPreview: "# Zero active intervention - Threat telemetry stream only",
+    explanation: "Passive monitoring. Warning: Unmitigated trajectory projects full system compromise (MITRE T1048 Exfiltration) within K=5."
+  }
+};
 
 export function DefenseSandboxPanel({
   mitigationData,
   selectedAction,
   onSelectAction,
   onOpenDossier,
+  hostIp = "172.16.0.1",
 }: DefenseSandboxPanelProps) {
-  const actions = mitigationData?.actions || [];
-  const currentAction = actions.find((a) => a.action === selectedAction) || actions[2] || actions[0];
-  const riskReductionPct = currentAction ? Math.round((currentAction.forecast_risk_reduction || 0.74) * 100) : 74;
+  const currentProfile = ACTION_PROFILES[selectedAction] || ACTION_PROFILES.RESET_CONNECTIONS;
 
   return (
     <div className="flex flex-col gap-5 rounded-xl border p-5 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3" style={{ borderColor: "var(--color-border)" }}>
         <div className="flex items-center gap-2">
-          <Zap size={18} className="text-amber-400" />
+          <Zap size={18} className="text-[var(--color-accent)] animate-pulse" />
           <h3 className="font-semibold text-sm tracking-wide text-[var(--color-text-primary)]">
-            INTERACTIVE "WHAT-IF" DEFENSE POLICY SANDBOX (LATENT SPACE SIMULATION)
+            INTERACTIVE "WHAT-IF" DEFENSE POLICY SANDBOX (LATENT COUNTERFACTUAL SIMULATION)
           </h3>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={onOpenDossier}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-all hover:scale-105 shadow-md"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-all hover:scale-105 shadow-md"
             style={{ backgroundColor: "var(--color-accent)" }}
           >
             <FileText size={14} />
-            <span>Generate Sovereign NCIIPC Dossier</span>
+            <span>Generate Sovereign Incident Dossier</span>
           </button>
         </div>
       </div>
 
       {/* Main Sandbox Grid */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Left 2 Cols: Action Selector Cards */}
-        <div className="flex flex-col gap-2.5 lg:col-span-2">
-          <div className="text-xs font-mono text-[var(--color-text-secondary)] mb-1">
-            SELECT PROACTIVE INTERVENTION POLICY:
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        {/* Left 7 Cols: Interactive Action Selector */}
+        <div className="flex flex-col gap-3 lg:col-span-7">
+          <div className="flex items-center justify-between font-mono text-xs text-[var(--color-text-secondary)]">
+            <span>CHOOSE DEFENSIVE INTERVENTION:</span>
+            <span className="text-[var(--color-accent)]">Live Trajectory Simulation</span>
           </div>
+
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {actions.map((act) => {
-              const isSelected = act.action === selectedAction;
-              const isRec = act.is_recommended;
-              const isBlocked = act.is_blocked_by_guardrail;
+            {Object.values(ACTION_PROFILES).map((prof) => {
+              const isSelected = prof.name === selectedAction;
+              const isOptimal = prof.name === (mitigationData?.safety_shield_recommendation || "ISOLATE_HOST");
 
               return (
                 <button
-                  key={act.action}
-                  onClick={() => !isBlocked && onSelectAction(act.action)}
-                  disabled={isBlocked}
+                  key={prof.name}
+                  onClick={() => onSelectAction(prof.name)}
                   className={`flex flex-col text-left rounded-lg p-3 border transition-all duration-200 ${
                     isSelected
-                      ? "ring-2 ring-[var(--color-accent)] shadow-md"
+                      ? "ring-2 ring-[var(--color-accent)] shadow-lg"
                       : "hover:border-[var(--color-accent)]"
-                  } ${isBlocked ? "opacity-50 cursor-not-allowed" : ""}`}
+                  }`}
                   style={{
-                    backgroundColor: isSelected ? "rgba(99, 102, 241, 0.15)" : "rgba(15, 23, 42, 0.4)",
+                    backgroundColor: isSelected ? "rgba(34, 211, 238, 0.12)" : "rgba(15, 23, 42, 0.5)",
                     borderColor: isSelected ? "var(--color-accent)" : "var(--color-border)",
                   }}
                 >
                   <div className="flex items-center justify-between w-full mb-1">
-                    <span className="font-semibold text-xs text-[var(--color-text-primary)]">
-                      {act.action.replace("_", " ")}
+                    <span className="font-bold text-xs text-[var(--color-text-primary)]">
+                      {prof.label.split(" (")[0]}
                     </span>
-                    {isRec && (
-                      <span className="rounded px-1.5 py-0.5 text-[10px] font-mono font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        OPTIMAL
+                    {isOptimal && (
+                      <span className="rounded px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        RECOMMENDED
                       </span>
                     )}
-                    {isBlocked && (
-                      <span className="rounded px-1.5 py-0.5 text-[10px] font-mono font-medium bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                        BLOCKED
+                    {prof.name === "MONITOR_ONLY" && (
+                      <span className="rounded px-1.5 py-0.5 text-[10px] font-mono font-medium bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                        NO DEFENSE
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-[var(--color-text-secondary)] line-clamp-2 mb-2">
-                    {act.description}
+                  <p className="text-[11px] text-[var(--color-text-secondary)] line-clamp-2 mb-2 leading-relaxed">
+                    {prof.explanation}
                   </p>
-                  <div className="mt-auto flex items-center justify-between font-mono text-[10px] pt-1 border-t border-white/5">
-                    <span className="text-[var(--color-text-secondary)]">
-                      Cost: {(act.operational_cost * 100).toFixed(0)}%
+                  <div className="mt-auto flex items-center justify-between font-mono text-[10px] pt-1.5 border-t border-white/5">
+                    <span className="text-[var(--color-text-muted)]">
+                      Cost: {(prof.cost * 100).toFixed(0)}%
                     </span>
-                    <span className={act.forecast_risk_reduction > 0.5 ? "text-emerald-400 font-bold" : "text-amber-400"}>
-                      -{Math.round(act.forecast_risk_reduction * 100)}% Risk
+                    <span className={prof.riskReduction > 0.6 ? "text-emerald-400 font-bold" : prof.riskReduction > 0 ? "text-amber-400 font-bold" : "text-rose-400 font-bold"}>
+                      {prof.riskReduction > 0 ? `-${Math.round(prof.riskReduction * 100)}% Risk` : "+0% (Adversary Wins)"}
                     </span>
                   </div>
                 </button>
               );
             })}
           </div>
+
+          {/* Generated Autonomous Firewall Rule Preview */}
+          <div className="mt-2 rounded-lg border p-3 font-mono text-xs bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+            <div className="flex items-center justify-between text-[10px] text-[var(--color-text-muted)] mb-1">
+              <span>AUTONOMOUS FIREWALL RULE SYNTHESIZER:</span>
+              <span className="text-emerald-400">READY FOR 1-CLICK DISPATCH</span>
+            </div>
+            <code className="block text-[var(--color-accent)] font-semibold truncate">
+              {currentProfile.commandPreview.replace("{HOST_IP}", hostIp).replace("{PORT}", "8080/22")}
+            </code>
+          </div>
         </div>
 
-        {/* Right 1 Col: Latent State Impact Card */}
-        <div className="flex flex-col justify-between rounded-lg p-4 border" style={{ backgroundColor: "rgba(15, 23, 42, 0.6)", borderColor: "var(--color-border)" }}>
-          <div>
-            <div className="flex items-center gap-1.5 font-mono text-xs text-[var(--color-text-secondary)] mb-2">
-              <ShieldAlert size={14} className="text-[var(--color-accent)]" />
-              <span>PROJECTED RISK REDUCTION</span>
+        {/* Right 5 Cols: Real-Time Dual Trajectory Simulation Graph */}
+        <div className="flex flex-col rounded-lg p-4 border lg:col-span-5 bg-[var(--color-panel-raised)]" style={{ borderColor: "var(--color-border)" }}>
+          <div className="flex items-center justify-between font-mono text-xs text-[var(--color-text-secondary)] mb-2">
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck size={14} className="text-emerald-400" />
+              <span>COUNTERFACTUAL HORIZON</span>
             </div>
-
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-3xl font-extrabold font-mono text-emerald-400">
-                -{riskReductionPct}%
-              </span>
-              <span className="text-xs text-[var(--color-text-secondary)] font-mono">
-                Threat Probability Drop
-              </span>
-            </div>
-
-            <p className="text-xs text-[var(--color-text-primary)] leading-relaxed mb-3">
-              Applying <strong>{currentAction?.action.replace("_", " ")}</strong> in latent state space projects immediate attenuation of attack progression before physical firewall deployment.
-            </p>
+            <span className="text-[10px] uppercase text-emerald-400 font-bold font-mono">
+              -{Math.round(currentProfile.riskReduction * 100)}% DROP
+            </span>
           </div>
 
-          <div className="rounded p-2.5 font-mono text-[11px] bg-black/40 border border-white/5 space-y-1">
-            <div className="flex justify-between text-[var(--color-text-secondary)]">
-              <span>Policy Status:</span>
-              <span className="text-emerald-400 font-semibold">PRE-VALIDATED</span>
+          {/* SVG Dual-Curve Graph: Red (Do Nothing) vs Cyan/Green (After Mitigation) */}
+          <div className="relative h-44 w-full rounded-lg border p-3 bg-[var(--color-base)] flex flex-col justify-between" style={{ borderColor: "var(--color-border)" }}>
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-rose-400 flex items-center gap-1">
+                <span className="inline-block w-2.5 h-0.5 bg-rose-500"></span> Unmitigated
+              </span>
+              <span className="text-emerald-400 flex items-center gap-1">
+                <span className="inline-block w-2.5 h-0.5 bg-emerald-400"></span> {selectedAction.replace("_", " ")}
+              </span>
             </div>
-            <div className="flex justify-between text-[var(--color-text-secondary)]">
-              <span>Safety Guardrail:</span>
-              <span className="text-cyan-400">PASSED (G-01/G-02)</span>
+
+            {/* SVG Plot */}
+            <svg viewBox="0 0 300 100" className="w-full h-28 overflow-visible">
+              {/* Grid Lines */}
+              <line x1="0" y1="20" x2="300" y2="20" stroke="rgba(255,255,255,0.06)" strokeDasharray="3,3" />
+              <line x1="0" y1="50" x2="300" y2="50" stroke="rgba(255,255,255,0.06)" strokeDasharray="3,3" />
+              <line x1="0" y1="80" x2="300" y2="80" stroke="rgba(255,255,255,0.06)" strokeDasharray="3,3" />
+
+              {/* Red Unmitigated Line: Escalates to 99% */}
+              <polyline
+                fill="none"
+                stroke="#f43f5e"
+                strokeWidth="2.5"
+                strokeDasharray="4,4"
+                points="10,25 75,18 150,12 225,8 290,5"
+              />
+              <circle cx="290" cy="5" r="3" fill="#f43f5e" />
+
+              {/* Green/Cyan Mitigated Line: Plummets based on selected action! */}
+              {(() => {
+                const traj = currentProfile.trajectory;
+                // Scale traj (0.0 to 1.0) into Y coordinates (90 = low risk, 10 = high risk)
+                const pts = traj
+                  .map((val, idx) => {
+                    const x = 10 + idx * 70;
+                    const y = 95 - val * 85;
+                    return `${x},${y}`;
+                  })
+                  .join(" ");
+
+                const finalY = 95 - traj[4] * 85;
+                return (
+                  <>
+                    <polyline
+                      fill="none"
+                      stroke="#34d399"
+                      strokeWidth="3"
+                      points={pts}
+                      className="transition-all duration-500 ease-out"
+                    />
+                    <circle cx="290" cy={finalY} r="4" fill="#34d399" className="animate-pulse" />
+                  </>
+                );
+              })()}
+            </svg>
+
+            {/* Horizon Labels */}
+            <div className="flex items-center justify-between text-[9px] font-mono text-[var(--color-text-muted)] border-t border-white/5 pt-1">
+              <span>T (Now)</span>
+              <span>T+1 (+10s)</span>
+              <span>T+2 (+20s)</span>
+              <span>T+3 (+30s)</span>
+              <span>T+5 (+50s)</span>
             </div>
-            <div className="flex justify-between text-[var(--color-text-secondary)]">
-              <span>Simulation Horizon:</span>
-              <span className="text-purple-300">K=5 (+50s)</span>
+          </div>
+
+          {/* Outcome Comparison Summary */}
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="rounded border p-2 bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+              <div className="text-[10px] text-rose-400">UNMITIGATED RISK</div>
+              <div className="mt-0.5 text-base font-bold text-rose-400">99.2% Risk</div>
+              <div className="text-[10px] text-[var(--color-text-muted)]">Full Exfiltration</div>
+            </div>
+            <div className="rounded border p-2 bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+              <div className="text-[10px] text-emerald-400">AFTER POLICY</div>
+              <div className="mt-0.5 text-base font-bold text-emerald-400">
+                {(currentProfile.residualRisk * 100).toFixed(1)}% Risk
+              </div>
+              <div className="text-[10px] text-emerald-400/80">Attack Neutralized</div>
             </div>
           </div>
         </div>

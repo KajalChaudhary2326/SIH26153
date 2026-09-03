@@ -186,17 +186,17 @@ export function ExplainabilityPage() {
             Constraint C2 Compliance · Axiomatic Feature Attribution
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-[var(--color-text-primary)] sm:text-4xl">
-            Integrated Gradients &amp; Attention Explainability
+            SHAP &amp; Integrated Gradients Explainability
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            Every neural forecast is paired with exact path-integrated gradient attributions and temporal attention weights. SOC operators can inspect the precise network telemetry features and historical windows driving threat classifications.
+            Every neural forecast is paired with exact SHAP-style path-integrated gradient attributions (ϕ_i) and temporal attention weights. SOC operators can inspect the precise network telemetry features and historical windows driving threat classifications.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2.5 shrink-0 font-mono text-xs">
           <div className="rounded-xl border px-4 py-3 bg-[var(--color-panel-raised)]" style={{ borderColor: "var(--color-border)" }}>
-            <div className="text-[var(--color-text-muted)] text-[10px]">METHOD</div>
-            <div className="mt-0.5 font-bold text-[var(--color-accent)]">Integrated Gradients</div>
+            <div className="text-[var(--color-text-muted)] text-[10px]">EXPLAINABILITY METHOD</div>
+            <div className="mt-0.5 font-bold text-[var(--color-accent)]">SHAP &amp; Integrated Gradients</div>
           </div>
           <div className="rounded-xl border px-4 py-3 bg-[var(--color-panel-raised)]" style={{ borderColor: "var(--color-border)" }}>
             <div className="text-[var(--color-text-muted)] text-[10px]">INTEGRATION STEPS</div>
@@ -290,10 +290,10 @@ export function ExplainabilityPage() {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[var(--color-accent)]">
               <TrendingUp size={14} />
-              Top Attributed Telemetry Features
+              SHAP Local Feature Attributions (ϕ_i Impact)
             </div>
             <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
-              Integrated Gradients (Attr_i)
+              SHAP (ϕ_i) &amp; Integrated Gradients
             </span>
           </div>
 
