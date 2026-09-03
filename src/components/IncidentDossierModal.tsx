@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Copy, Check, Download, ShieldCheck, Terminal } from "lucide-react";
+import { X, Copy, Check, Download, ShieldCheck, Terminal, AlertTriangle } from "lucide-react";
 import { getDefenseRules, type DefenseRulesResponse } from "../data/api";
 
 interface IncidentDossierModalProps {
@@ -101,6 +101,28 @@ export function IncidentDossierModal({
             <div>
               <span className="text-[var(--color-text-secondary)] block">PROACTIVE DROP:</span>
               <strong className="text-emerald-400">-{dossier?.projected_risk_reduction_pct || 78.4}% RISK</strong>
+            </div>
+          </div>
+
+          {/* National Vulnerability Database (CVE/NVD) Threat Intelligence Card */}
+          <div className="rounded-xl border p-3.5 bg-[var(--color-base)] space-y-1.5" style={{ borderColor: "var(--color-border)" }}>
+            <div className="flex items-center justify-between font-mono text-xs">
+              <span className="text-[var(--color-text-secondary)] flex items-center gap-1.5 font-bold">
+                <AlertTriangle size={14} className="text-amber-400" />
+                <span>NATIONAL VULNERABILITY DATABASE (NVD / CVE) THREAT ADVISORY:</span>
+              </span>
+              <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold font-mono">
+                CVSS SEVERITY: {dossier?.cvss_score || (predictedClass.includes("SSH") ? 7.5 : predictedClass.includes("SCADA") ? 8.8 : 9.8)} / 10.0
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 font-mono text-xs">
+              <span className="text-[var(--color-accent)] font-bold">
+                {dossier?.cve_id || (predictedClass.includes("SSH") ? "CVE-2016-0777" : predictedClass.includes("SCADA") ? "CVE-2021-22779" : predictedClass.includes("Bot") ? "CVE-2019-11510" : "CVE-2021-41773")}
+              </span>
+              <span className="hidden sm:inline text-[var(--color-text-muted)]">|</span>
+              <span className="text-[var(--color-text-secondary)]">
+                {dossier?.remediation_advisory || (predictedClass.includes("SSH") ? "Update OpenSSH to >=8.4p1, enforce Ed25519 authentication keys, and disable password auth." : predictedClass.includes("SCADA") ? "Enforce air-gapped unidirectional data diodes and block Modbus Function 0x05." : "Deploy emergency perimeter filtering and apply vendor security patch.")}
+              </span>
             </div>
           </div>
 

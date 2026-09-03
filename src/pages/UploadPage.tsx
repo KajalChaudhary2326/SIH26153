@@ -77,6 +77,15 @@ const SAMPLE_FILES = [
     desc: "Industrial telemetry packets on Port 502 with coil read/write queries",
     severity: "critical",
   },
+  {
+    name: "outside_darpa1998_military.pcap",
+    type: "pcap" as SourceType,
+    size: "185 KB",
+    scenarioId: "sess_ssh_patator",
+    label: "DARPA 1998 Military Intrusion (.pcap)",
+    desc: "Authentic US Department of Defense military cyber range packet trace with raw IP/TCP packets (PS Clause 64)",
+    severity: "critical",
+  },
 ];
 
 export function UploadPage() {

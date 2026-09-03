@@ -880,6 +880,9 @@ export interface DefenseRulesResponse {
   dossier_markdown: string;
   projected_risk_reduction_pct: number;
   target_port: number;
+  cve_id?: string;
+  cvss_score?: number;
+  remediation_advisory?: string;
 }
 
 export async function getMitreReasoning(params: {
