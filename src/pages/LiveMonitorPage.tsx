@@ -17,8 +17,6 @@ import {
   Check,
   AlertTriangle,
   Send,
-  Lock,
-  Unlock,
   Layers,
 } from "lucide-react";
 import {
@@ -59,7 +57,6 @@ export function LiveMonitorPage() {
   const [assetName, setAssetName] = useState("SBI Core Banking Portal & Substation");
   const [assetDomain, setAssetDomain] = useState("core-banking.sbi.co.in");
   const [assetIp, setAssetIp] = useState("192.168.10.50");
-  const [isSentinelLocked, setIsSentinelLocked] = useState(true);
 
   // Feature 2: Instant Alert Dispatcher State (Email, Webhook, WhatsApp)
   const [recipientEmail, setRecipientEmail] = useState("soc-leads@cert-in.gov.in");
@@ -312,101 +309,156 @@ export function LiveMonitorPage() {
   return (
     <div className="flex flex-col gap-6 pb-12">
       {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {/* FEATURE 1: ENTERPRISE ASSET ONBOARDING & 24x7 SENTINEL STATUS PANEL */}
+      {/* FEATURE 1: 24/7 AUTONOMOUS SENTINEL: CUSTOM IP & MULTI-CHANNEL DISPATCH PANEL */}
       {/* ───────────────────────────────────────────────────────────────────────────── */}
       <div
-        className="rounded-xl border p-5 glow-box relative overflow-hidden"
+        className="rounded-xl border p-5 glow-box relative overflow-hidden flex flex-col gap-4"
         style={{ borderColor: "var(--color-accent)", backgroundColor: "var(--color-panel)" }}
       >
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Top Header Row */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4" style={{ borderColor: "var(--color-border)" }}>
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--color-accent)]/15 border border-[var(--color-accent)]/30 text-[var(--color-accent)]">
-              <Building2 size={22} />
+              <Shield size={22} className="animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-accent)] font-bold">
-                  PROTECTED CRITICAL ASSET (NTRO / CII ONBOARDED)
+                  24/7 AUTONOMOUS SOVEREIGN SENTINEL
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                  24/7 SENTINEL ACTIVE
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-0.5 font-mono text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  24/7 MONITORING ARMED
                 </span>
               </div>
-              {isSentinelLocked ? (
-                <h2 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2 mt-0.5">
-                  {assetName}
-                </h2>
-              ) : (
-                <input
-                  type="text"
-                  value={assetName}
-                  onChange={(e) => setAssetName(e.target.value)}
-                  className="mt-1 rounded border bg-slate-950 px-2 py-0.5 text-sm font-bold text-[var(--color-accent)] border-slate-700 focus:outline-none"
-                />
-              )}
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)] mt-0.5">
+                Custom Asset Onboarding &amp; Multi-Channel Early Warning Dispatcher
+              </h2>
             </div>
           </div>
 
-          {/* Quick Lock / Edit Asset Details */}
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsSentinelLocked(!isSentinelLocked)}
-              className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-mono text-xs font-semibold bg-[var(--color-base)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-              style={{ borderColor: "var(--color-border)" }}
+              onClick={() => {
+                handleTestAlertDispatch();
+                setShowAlertModal(true);
+              }}
+              className="inline-flex items-center gap-2 rounded-lg px-4 py-2 font-mono text-xs font-bold bg-[var(--color-accent)] text-slate-950 hover:opacity-90 shadow-lg transition-all hover:scale-105"
             >
-              {isSentinelLocked ? <Lock size={13} /> : <Unlock size={13} />}
-              {isSentinelLocked ? "ASSET LOCKED" : "EDIT ONBOARDING"}
-            </button>
-            <button
-              onClick={handleTestAlertDispatch}
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-xs font-semibold bg-[var(--color-accent)] text-slate-950 hover:opacity-90 shadow-md"
-            >
-              <Send size={13} />
-              TEST ALERT DISPATCH
+              <Send size={14} />
+              <span>TEST 24/7 DISPATCH (WHATSAPP + EMAIL)</span>
             </button>
           </div>
         </div>
 
-        {/* Asset Telemetry Binding Fields */}
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
-          <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
-            <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
-              <Globe size={13} className="text-[var(--color-accent)]" /> TARGET ASSET DOMAIN
-            </div>
-            {isSentinelLocked ? (
-              <div className="mt-1 text-sm font-bold text-[var(--color-text-primary)]">{assetDomain}</div>
-            ) : (
+        {/* Section 1: Target IP & Asset Details (Fully User-Editable) */}
+        <div>
+          <div className="text-xs font-mono text-[var(--color-accent)] font-semibold mb-2 flex items-center gap-1.5">
+            <Server size={14} /> 1. CONFIGURE TARGET ASSET &amp; IP ADDRESS TO MONITOR:
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
+            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
+                <Building2 size={13} className="text-[var(--color-accent)]" /> TARGET ASSET NAME
+              </div>
               <input
                 type="text"
-                value={assetDomain}
-                onChange={(e) => setAssetDomain(e.target.value)}
-                className="mt-1 w-full rounded border bg-slate-950 px-2 py-1 text-xs text-[var(--color-accent)] border-slate-700"
+                value={assetName}
+                onChange={(e) => setAssetName(e.target.value)}
+                placeholder="e.g. SBI Core Banking Portal"
+                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] border-slate-700 focus:border-[var(--color-accent)] focus:outline-none"
               />
-            )}
-          </div>
-
-          <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
-            <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
-              <Server size={13} className="text-[var(--color-accent)]" /> PROTECTED SERVER IP / SUBNET
             </div>
-            {isSentinelLocked ? (
-              <div className="mt-1 text-sm font-bold text-[var(--color-text-primary)]">{assetIp}</div>
-            ) : (
+
+            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
+                <Radio size={13} className="text-emerald-400" /> TARGET SERVER IP / SUBNET
+              </div>
               <input
                 type="text"
                 value={assetIp}
                 onChange={(e) => setAssetIp(e.target.value)}
-                className="mt-1 w-full rounded border bg-slate-950 px-2 py-1 text-xs text-[var(--color-accent)] border-slate-700"
+                placeholder="e.g. 192.168.10.50 or 10.0.100.42"
+                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-emerald-400 border-slate-700 focus:border-[var(--color-accent)] focus:outline-none"
               />
-            )}
-          </div>
-
-          <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
-            <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
-              <Radio size={13} className="text-emerald-400" /> ACTIVE TELEMETRY CHANNELS
             </div>
-            <div className="mt-1 text-sm font-bold text-emerald-400">84 Synchronized (77 NetFlow + 7 PCAP)</div>
+
+            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
+                <Globe size={13} className="text-[var(--color-accent)]" /> DOMAIN / PORT IDENTIFIER
+              </div>
+              <input
+                type="text"
+                value={assetDomain}
+                onChange={(e) => setAssetDomain(e.target.value)}
+                placeholder="e.g. core-banking.sbi.co.in"
+                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] border-slate-700 focus:border-[var(--color-accent)] focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 2: 24/7 Incident Dispatch Targets (WhatsApp & Email Directly Editable) */}
+        <div>
+          <div className="text-xs font-mono text-[var(--color-accent)] font-semibold mb-2 flex items-center gap-1.5">
+            <Bell size={14} /> 2. CONFIGURE 24/7 ALERT DISPATCH DESTINATIONS (WHATSAPP, EMAIL &amp; SIEM):
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
+            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
+                <MessageSquare size={13} className="text-emerald-400" /> WHATSAPP INCIDENT NUMBER
+              </div>
+              <input
+                type="text"
+                value={whatsappNumber}
+                onChange={(e) => setWhatsappNumber(e.target.value)}
+                placeholder="+91 98765 43210"
+                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-emerald-400 border-slate-700 focus:border-emerald-400 focus:outline-none"
+              />
+              <div className="text-[10px] text-[var(--color-text-muted)] mt-1">Dispatches critical pre-breach warning via SMS/WhatsApp</div>
+            </div>
+
+            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
+                <Mail size={13} className="text-cyan-400" /> RECIPIENT SOC EMAIL
+              </div>
+              <input
+                type="text"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                placeholder="soc-leads@cert-in.gov.in"
+                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-cyan-400 border-slate-700 focus:border-cyan-400 focus:outline-none"
+              />
+              <div className="text-[10px] text-[var(--color-text-muted)] mt-1">Sends forensic dossier &amp; synthesized firewall commands</div>
+            </div>
+
+            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
+                <Terminal size={13} className="text-purple-400" /> SIEM / WEBHOOK ENDPOINT
+              </div>
+              <input
+                type="text"
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+                placeholder="https://hooks.slack.com/services/..."
+                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs text-purple-300 border-slate-700 focus:border-purple-400 focus:outline-none"
+              />
+              <div className="text-[10px] text-[var(--color-text-muted)] mt-1">Instant JSON webhook POST on P(Attack) &ge; 0.75</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sentinel Live Status Bar */}
+        <div className="rounded-lg border p-2.5 bg-black/40 flex flex-wrap items-center justify-between text-xs font-mono" style={{ borderColor: "var(--color-border)" }}>
+          <div className="flex items-center gap-3">
+            <span className="text-[var(--color-text-muted)]">Sentinel Engine:</span>
+            <span className="text-emerald-400 font-bold">● ONLINE (84 Channels Bound)</span>
+            <span className="text-[var(--color-text-muted)]">|</span>
+            <span className="text-[var(--color-text-muted)]">Alert Threshold:</span>
+            <span className="text-rose-400 font-bold">P(Attack) &ge; 75.0%</span>
+          </div>
+          <div className="text-[var(--color-text-secondary)] text-[11px]">
+            Monitored Target: <strong className="text-[var(--color-accent)]">{assetIp}</strong> ({assetDomain})
           </div>
         </div>
       </div>

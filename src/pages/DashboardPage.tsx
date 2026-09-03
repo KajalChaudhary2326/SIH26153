@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, BarChart3, Eye, Upload, Radio } from "lucide-react";
+import { Activity, BarChart3, Eye, Upload, Bell } from "lucide-react";
 import { UploadPage } from "./UploadPage";
 import { SimulationPage } from "./SimulationPage";
 import { ExplainabilityPage } from "./ExplainabilityPage";
@@ -9,7 +9,7 @@ import { LiveMonitorPage } from "./LiveMonitorPage";
 
 const tabs = [
   { to: "/dashboard", label: "Upload", icon: Upload, end: true },
-  { to: "/dashboard/live", label: "Live Sniffer", icon: Radio, highlight: true },
+  { to: "/dashboard/live", label: "24/7 Live Sentinel (WhatsApp & Email)", icon: Bell, highlight: true },
   { to: "/dashboard/simulation", label: "Scenario Simulation", icon: Activity },
   { to: "/dashboard/explainability", label: "Explainability", icon: Eye },
   { to: "/dashboard/baseline", label: "Baseline Comparison", icon: BarChart3 },
