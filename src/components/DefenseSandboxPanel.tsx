@@ -167,7 +167,7 @@ export function DefenseSandboxPanel({
                       : "hover:border-[var(--color-accent)]"
                   }`}
                   style={{
-                    backgroundColor: isSelected ? "rgba(34, 211, 238, 0.12)" : "rgba(15, 23, 42, 0.5)",
+                    backgroundColor: isSelected ? "color-mix(in srgb, var(--color-accent) 12%, transparent)" : "color-mix(in srgb, var(--color-base) 50%, transparent)",
                     borderColor: isSelected ? "var(--color-accent)" : "var(--color-border)",
                   }}
                 >
@@ -240,9 +240,9 @@ export function DefenseSandboxPanel({
             {/* SVG Plot */}
             <svg viewBox="0 0 300 100" className="w-full h-28 overflow-visible">
               {/* Grid Lines */}
-              <line x1="0" y1="20" x2="300" y2="20" stroke="rgba(255,255,255,0.06)" strokeDasharray="3,3" />
-              <line x1="0" y1="50" x2="300" y2="50" stroke="rgba(255,255,255,0.06)" strokeDasharray="3,3" />
-              <line x1="0" y1="80" x2="300" y2="80" stroke="rgba(255,255,255,0.06)" strokeDasharray="3,3" />
+              <line x1="0" y1="20" x2="300" y2="20" stroke="color-mix(in srgb, var(--color-text-primary) 6%, transparent)" strokeDasharray="3,3" />
+              <line x1="0" y1="50" x2="300" y2="50" stroke="color-mix(in srgb, var(--color-text-primary) 6%, transparent)" strokeDasharray="3,3" />
+              <line x1="0" y1="80" x2="300" y2="80" stroke="color-mix(in srgb, var(--color-text-primary) 6%, transparent)" strokeDasharray="3,3" />
 
               {/* Dynamic Red Unmitigated Line */}
               {(() => {
@@ -258,12 +258,12 @@ export function DefenseSandboxPanel({
                   <>
                     <polyline
                       fill="none"
-                      stroke="#f43f5e"
+                      stroke="var(--color-critical)"
                       strokeWidth="2.5"
                       strokeDasharray="4,4"
                       points={pts}
                     />
-                    <circle cx="290" cy={finalY} r="3.5" fill="#f43f5e" />
+                    <circle cx="290" cy={finalY} r="3.5" fill="var(--color-critical)" />
                   </>
                 );
               })()}
@@ -283,12 +283,12 @@ export function DefenseSandboxPanel({
                   <>
                     <polyline
                       fill="none"
-                      stroke="#34d399"
+                      stroke="var(--color-normal)"
                       strokeWidth="3"
                       points={pts}
                       className="transition-all duration-500 ease-out"
                     />
-                    <circle cx="290" cy={finalY} r="4" fill="#34d399" className="animate-pulse" />
+                    <circle cx="290" cy={finalY} r="4" fill="var(--color-normal)" className="animate-pulse" />
                   </>
                 );
               })()}

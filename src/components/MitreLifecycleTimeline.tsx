@@ -7,11 +7,11 @@ interface MitreLifecycleTimelineProps {
 }
 
 const STAGES = [
-  { id: 1, name: "Reconnaissance", tactic: "TA0043", color: "#818CF8", desc: "Port Scan & Service Sweep" },
-  { id: 2, name: "Initial Access", tactic: "TA0001", color: "#F472B6", desc: "Brute Force & Exploit" },
-  { id: 3, name: "Lateral Movement", tactic: "TA0008", color: "#FB923C", desc: "Substation Pivoting" },
-  { id: 4, name: "Command & Control", tactic: "TA0011", color: "#F43F5E", desc: "Periodic C2 Beaconing" },
-  { id: 5, name: "Impact / Exfil", tactic: "TA0040", color: "#DC2626", desc: "Exhaustion & Interruption" },
+  { id: 1, name: "Reconnaissance", tactic: "TA0043", color: "var(--color-mitre-recon)", desc: "Port Scan & Service Sweep" },
+  { id: 2, name: "Initial Access", tactic: "TA0001", color: "var(--color-mitre-initial)", desc: "Brute Force & Exploit" },
+  { id: 3, name: "Lateral Movement", tactic: "TA0008", color: "var(--color-mitre-lateral)", desc: "Substation Pivoting" },
+  { id: 4, name: "Command & Control", tactic: "TA0011", color: "var(--color-mitre-c2)", desc: "Periodic C2 Beaconing" },
+  { id: 5, name: "Impact / Exfil", tactic: "TA0040", color: "var(--color-mitre-exfil)", desc: "Exhaustion & Interruption" },
 ];
 
 export function MitreLifecycleTimeline({ reasoning, currentStage }: MitreLifecycleTimelineProps) {
@@ -27,7 +27,7 @@ export function MitreLifecycleTimeline({ reasoning, currentStage }: MitreLifecyc
           </h3>
         </div>
         {reasoning?.risk_acceleration && (
-          <span className="rounded-full px-2.5 py-0.5 text-xs font-mono font-medium" style={{ backgroundColor: "rgba(220, 38, 38, 0.15)", color: "#F87171", border: "1px solid rgba(220, 38, 38, 0.3)" }}>
+          <span className="rounded-full px-2.5 py-0.5 text-xs font-mono font-medium" style={{ backgroundColor: "color-mix(in srgb, var(--color-mitre-exfil) 15%, transparent)", color: "color-mix(in srgb, var(--color-mitre-exfil) 75%, var(--color-text-primary))", border: "1px solid color-mix(in srgb, var(--color-mitre-exfil) 30%, transparent)" }}>
             Risk Acceleration: {reasoning.risk_acceleration}
           </span>
         )}
@@ -48,7 +48,7 @@ export function MitreLifecycleTimeline({ reasoning, currentStage }: MitreLifecyc
                   : "opacity-80"
               }`}
               style={{
-                backgroundColor: isCurrent ? "rgba(99, 102, 241, 0.12)" : "rgba(15, 23, 42, 0.4)",
+                backgroundColor: isCurrent ? "color-mix(in srgb, var(--color-mitre-recon) 12%, transparent)" : "color-mix(in srgb, var(--color-base) 40%, transparent)",
                 borderColor: isCurrent ? s.color : "var(--color-border)",
               }}
             >
@@ -73,7 +73,7 @@ export function MitreLifecycleTimeline({ reasoning, currentStage }: MitreLifecyc
 
       {/* Deep Symbolic Forensic Narrative */}
       {reasoning && (
-        <div className="rounded-lg p-3 text-xs leading-relaxed border" style={{ backgroundColor: "rgba(15, 23, 42, 0.6)", borderColor: "var(--color-border)" }}>
+        <div className="rounded-lg p-3 text-xs leading-relaxed border" style={{ backgroundColor: "color-mix(in srgb, var(--color-base) 60%, transparent)", borderColor: "var(--color-border)" }}>
           <div className="flex items-start gap-2 mb-2">
             <AlertCircle size={15} className="text-[var(--color-accent)] mt-0.5 shrink-0" />
             <p className="text-[var(--color-text-primary)] font-sans">
@@ -81,7 +81,7 @@ export function MitreLifecycleTimeline({ reasoning, currentStage }: MitreLifecyc
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 pt-2 border-t font-mono text-[11px]" style={{ borderColor: "rgba(255, 255, 255, 0.08)" }}>
+          <div className="flex flex-wrap items-center gap-3 pt-2 border-t font-mono text-[11px]" style={{ borderColor: "color-mix(in srgb, var(--color-text-primary) 8%, transparent)" }}>
             <span className="text-[var(--color-text-secondary)]">
               TECHNIQUE: <strong className="text-[var(--color-accent)]">{reasoning.mitre_technique_id} ({reasoning.mitre_technique_name})</strong>
             </span>

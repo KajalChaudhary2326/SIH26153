@@ -115,12 +115,12 @@ export function NetworkTopologyVisualizer({
           {/* Subtle Grid Background */}
           <defs>
             <pattern id="topo-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="color-mix(in srgb, var(--color-text-primary) 3%, transparent)" strokeWidth="1" />
             </pattern>
             {/* Animated Gradient Beam */}
             <linearGradient id="attackBeam" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.8" />
+              <stop offset="0%" stopColor="var(--color-critical)" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0.8" />
             </linearGradient>
           </defs>
           <rect width="540" height="220" fill="url(#topo-grid)" />
@@ -132,7 +132,7 @@ export function NetworkTopologyVisualizer({
             y1="110"
             x2="180"
             y2="110"
-            stroke={isIsolated ? "#10b981" : isCritical ? "#f43f5e" : "#22d3ee"}
+            stroke={isIsolated ? "var(--color-normal)" : isCritical ? "var(--color-critical)" : "var(--color-accent)"}
             strokeWidth={isCritical && !isIsolated ? "3" : "1.5"}
             strokeDasharray={isIsolated ? "4,4" : isCritical ? "none" : "3,3"}
           />
@@ -143,7 +143,7 @@ export function NetworkTopologyVisualizer({
             y1="110"
             x2="310"
             y2="110"
-            stroke={isIsolated ? "#10b981" : isCritical ? "#f43f5e" : "#22d3ee"}
+            stroke={isIsolated ? "var(--color-normal)" : isCritical ? "var(--color-critical)" : "var(--color-accent)"}
             strokeWidth={isCritical && !isIsolated ? "3" : "1.5"}
           />
 
@@ -153,7 +153,7 @@ export function NetworkTopologyVisualizer({
             y1="110"
             x2="440"
             y2="55"
-            stroke={isIsolated ? "#64748b" : isCritical ? "#fb923c" : "#64748b"}
+            stroke={isIsolated ? "var(--color-text-secondary)" : isCritical ? "var(--color-elevated)" : "var(--color-text-secondary)"}
             strokeWidth="1.5"
             strokeDasharray="2,2"
           />
@@ -164,20 +164,20 @@ export function NetworkTopologyVisualizer({
             y1="110"
             x2="440"
             y2="165"
-            stroke={isIsolated ? "#10b981" : isCritical ? "#f43f5e" : "#22d3ee"}
+            stroke={isIsolated ? "var(--color-normal)" : isCritical ? "var(--color-critical)" : "var(--color-accent)"}
             strokeWidth={isCritical && !isIsolated ? "3" : "1.5"}
           />
 
           {/* Active Attack Propagation Pulse */}
           {isCritical && !isIsolated && (
             <>
-              <circle cx="120" cy="110" r="3.5" fill="#f43f5e">
+              <circle cx="120" cy="110" r="3.5" fill="var(--color-critical)">
                 <animate attributeName="cx" from="60" to="180" dur="1.2s" repeatCount="indefinite" />
               </circle>
-              <circle cx="245" cy="110" r="3.5" fill="#f43f5e">
+              <circle cx="245" cy="110" r="3.5" fill="var(--color-critical)">
                 <animate attributeName="cx" from="180" to="310" dur="1.2s" repeatCount="indefinite" />
               </circle>
-              <circle cx="375" cy="137" r="3.5" fill="#f43f5e">
+              <circle cx="375" cy="137" r="3.5" fill="var(--color-critical)">
                 <animate attributeName="cx" from="310" to="440" dur="1.2s" repeatCount="indefinite" />
                 <animate attributeName="cy" from="110" to="165" dur="1.2s" repeatCount="indefinite" />
               </circle>
@@ -191,17 +191,17 @@ export function NetworkTopologyVisualizer({
             let fillColor = "var(--color-panel)";
 
             if (node.type === "attacker") {
-              strokeColor = isIsolated ? "#10b981" : "#f43f5e";
-              fillColor = isIsolated ? "rgba(16, 185, 129, 0.15)" : "rgba(244, 63, 94, 0.2)";
+              strokeColor = isIsolated ? "var(--color-normal)" : "var(--color-critical)";
+              fillColor = isIsolated ? "color-mix(in srgb, var(--color-normal) 15%, transparent)" : "color-mix(in srgb, var(--color-critical) 20%, transparent)";
             } else if (node.type === "scada") {
-              strokeColor = isCritical && !isIsolated ? "#f43f5e" : "#22d3ee";
-              fillColor = isCritical && !isIsolated ? "rgba(244, 63, 94, 0.2)" : "rgba(34, 211, 238, 0.15)";
+              strokeColor = isCritical && !isIsolated ? "var(--color-critical)" : "var(--color-accent)";
+              fillColor = isCritical && !isIsolated ? "color-mix(in srgb, var(--color-critical) 20%, transparent)" : "color-mix(in srgb, var(--color-accent) 15%, transparent)";
             } else if (node.type === "perimeter") {
-              strokeColor = "#3b82f6";
-              fillColor = "rgba(59, 130, 246, 0.15)";
+              strokeColor = "var(--color-accent-secondary)";
+              fillColor = "color-mix(in srgb, var(--color-accent-secondary) 15%, transparent)";
             } else if (node.type === "switch") {
-              strokeColor = "#8b5cf6";
-              fillColor = "rgba(139, 92, 246, 0.15)";
+              strokeColor = "var(--color-mitre-recon)";
+              fillColor = "color-mix(in srgb, var(--color-mitre-recon) 15%, transparent)";
             }
 
             return (
@@ -251,7 +251,7 @@ export function NetworkTopologyVisualizer({
                   </text>
                 )}
                 {node.type === "workstation" && (
-                  <text x={node.x} y={node.y + 4} textAnchor="middle" fontSize="10" fill="#94a3b8" fontWeight="bold">
+                  <text x={node.x} y={node.y + 4} textAnchor="middle" fontSize="10" fill="var(--color-text-secondary)" fontWeight="bold">
                     💻
                   </text>
                 )}

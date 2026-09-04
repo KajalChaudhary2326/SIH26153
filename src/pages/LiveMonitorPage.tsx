@@ -472,7 +472,7 @@ export function LiveMonitorPage() {
                 <Tooltip
                   contentStyle={{ backgroundColor: "var(--color-panel)", borderColor: "var(--color-border)", fontSize: "11px", fontFamily: "monospace" }}
                 />
-                <ReferenceLine y={0.75} stroke="#F43F5E" strokeDasharray="4 4" label={{ value: "SHIELD THRESHOLD (0.75)", fill: "#F43F5E", fontSize: 10 }} />
+                <ReferenceLine y={0.75} stroke="var(--color-critical)" strokeDasharray="4 4" label={{ value: "SHIELD THRESHOLD (0.75)", fill: "var(--color-critical)", fontSize: 10 }} />
                 <Line
                   type="monotone"
                   dataKey="threatProbability"

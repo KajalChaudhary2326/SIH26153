@@ -20,6 +20,7 @@
   --color-border: #253049;
 
   --color-accent: #22d3ee;
+  --color-accent-secondary: #3b82f6;
   --color-critical: #f43f5e;
   --color-elevated: #fb923c;
   --color-watch: #facc15;
@@ -31,7 +32,7 @@
   --color-mitre-c2: #f43f5e;
   --color-mitre-exfil: #dc2626;
 
-  --color-text-primary: #e6ebf5;
+  --color-text-primary: var(--color-text-primary);
   --color-text-secondary: #8b96ad;
   --color-text-muted: #5b6580;
 }
@@ -45,6 +46,7 @@ html.light {
   --color-border: #a9e3f2;
 
   --color-accent: #0284c7;
+  --color-accent-secondary: #2563eb;
   --color-critical: #e11d48;
   --color-elevated: #ea580c;
   --color-watch: #d97706;
@@ -147,11 +149,11 @@ html.light .bg-grid {
 
 /* Premium typography + full-width command-center layout */
 html.dark .glow-box {
-  box-shadow: 0 0 24px -6px rgba(34, 211, 238, 0.06), 0 0 1px 1px rgba(37, 48, 73, 0.45);
+  box-shadow: 0 0 24px -6px color-mix(in srgb, var(--color-accent) 6%, transparent), 0 0 1px 1px color-mix(in srgb, var(--color-border) 45%, transparent);
 }
 
 html.light .glow-box {
-  box-shadow: 0 6px 18px -4px rgba(14, 116, 144, 0.12), 0 0 1px 1px rgba(125, 211, 252, 0.55);
+  box-shadow: 0 6px 18px -4px color-mix(in srgb, var(--color-accent-secondary) 12%, transparent), 0 0 1px 1px color-mix(in srgb, var(--color-accent) 55%, transparent);
 }
 
 html.light .sentinel-app [style*="backgroundColor: var(--color-panel)"] {
@@ -159,7 +161,7 @@ html.light .sentinel-app [style*="backgroundColor: var(--color-panel)"] {
 }
 
 html.light .sentinel-app [style*="backgroundColor: var(--color-base)"] {
-  background-color: #e6f7fa !important;
+  background-color: color-mix(in srgb, var(--color-base) 92%, var(--color-panel)) !important;
 }
 
 .sparkle-3d-background {
@@ -243,27 +245,27 @@ html.light .sparkle-3d-background {
 /* Chart text clarity */
 html.dark .forecast-chart-card .text-\[var\(--color-text-muted\)\],
 html.dark .forecast-chart-card .text-\[var\(--color-text-secondary\)\] {
-  color: #dbeafe !important;
+  color: var(--color-text-secondary) !important;
 }
 html.dark .forecast-chart-card .recharts-text,
 html.dark .forecast-chart-card .recharts-cartesian-axis-tick-value,
 html.dark .forecast-chart-card .recharts-label,
 html.dark .forecast-chart-card .recharts-legend-item-text {
-  fill: #dbeafe !important;
-  color: #dbeafe !important;
+  fill: var(--color-text-secondary) !important;
+  color: var(--color-text-secondary) !important;
 }
 html.dark .forecast-chart-card .recharts-cartesian-axis-tick-value {
-  fill: #dbeafe !important;
+  fill: var(--color-text-secondary) !important;
 }
 html.dark .forecast-chart-card .recharts-reference-line text {
-  fill: #ffffff !important;
+  fill: var(--color-text-primary) !important;
 }
 html.dark .forecast-chart-card .recharts-tooltip-wrapper {
-  color: #e6ebf5 !important;
+  color: var(--color-text-primary) !important;
 }
 html.dark .forecast-chart-card .text-base,
 html.dark .forecast-chart-card .text-sm {
-  color: #67e8f9 !important;
+  color: var(--color-accent) !important;
 }
 
 /* ===== PREMIUM ANIMATION LIBRARY ===== */
@@ -282,10 +284,10 @@ html.dark .forecast-chart-card .text-sm {
 
 @keyframes glow-pulse {
   0%, 100% {
-    box-shadow: 0 0 24px -6px rgba(34, 211, 238, 0.15), inset 0 0 20px -10px rgba(34, 211, 238, 0.05);
+    box-shadow: 0 0 24px -6px color-mix(in srgb, var(--color-accent) 15%, transparent), inset 0 0 20px -10px color-mix(in srgb, var(--color-accent) 5%, transparent);
   }
   50% {
-    box-shadow: 0 0 32px -4px rgba(34, 211, 238, 0.25), inset 0 0 24px -8px rgba(34, 211, 238, 0.1);
+    box-shadow: 0 0 32px -4px color-mix(in srgb, var(--color-accent) 25%, transparent), inset 0 0 24px -8px color-mix(in srgb, var(--color-accent) 10%, transparent);
   }
 }
 
@@ -310,11 +312,11 @@ html.dark .forecast-chart-card .text-sm {
 @keyframes border-glow {
   0%, 100% {
     border-color: color-mix(in srgb, var(--color-border) 100%, transparent);
-    box-shadow: 0 0 16px -8px rgba(34, 211, 238, 0.1);
+    box-shadow: 0 0 16px -8px color-mix(in srgb, var(--color-accent) 10%, transparent);
   }
   50% {
     border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
-    box-shadow: 0 0 24px -4px rgba(34, 211, 238, 0.3);
+    box-shadow: 0 0 24px -4px color-mix(in srgb, var(--color-accent) 30%, transparent);
   }
 }
 
@@ -407,7 +409,7 @@ html.dark .forecast-chart-card .text-sm {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(34, 211, 238, 0.1),
+    color-mix(in srgb, var(--color-accent) 10%, transparent),
     transparent
   );
   transition: left 0.5s ease;
@@ -431,9 +433,9 @@ html.dark .forecast-chart-card .text-sm {
   border-radius: 1rem;
   padding: 1px;
   background: linear-gradient(135deg, 
-    rgba(34, 211, 238, 0.3) 0%,
-    rgba(34, 211, 238, 0.0) 50%,
-    rgba(34, 211, 238, 0.1) 100%
+    color-mix(in srgb, var(--color-accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--color-accent) 0%, transparent) 50%,
+    color-mix(in srgb, var(--color-accent) 10%, transparent) 100%
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -480,7 +482,7 @@ html.dark .forecast-chart-card .text-sm {
 
 .section-title-glow {
   position: relative;
-  text-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--color-accent) 20%, transparent);
   transition: text-shadow 0.3s ease;
 }
 

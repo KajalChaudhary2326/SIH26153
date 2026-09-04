@@ -47,7 +47,7 @@ export function MITREStageBadge({ stage, size = "sm" }: MITREStageBadgeProps) {
           className="flex items-center justify-center rounded-full"
           style={{ width: isLarge ? 22 : 16, height: isLarge ? 22 : 16 }}
         >
-          <Icon size={isLarge ? 14 : 10} color="#0a0e17" strokeWidth={2.5} />
+          <Icon size={isLarge ? 14 : 10} color="var(--color-base)" strokeWidth={2.5} />
         </motion.span>
         <span className="uppercase tracking-wide">{config.label}</span>
       </motion.div>

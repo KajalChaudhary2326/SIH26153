@@ -57,7 +57,7 @@ export function HomePage() {
 
           <h1 className="mt-5 max-w-2xl text-4xl font-extrabold tracking-tight text-[var(--color-text-primary)] sm:text-5xl lg:text-6xl lg:leading-[1.12]">
             Forecasting Cyber Intrusions{" "}
-            <span className="bg-gradient-to-r from-[var(--color-accent)] via-[#67e8f9] to-[var(--color-normal)] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-accent)] to-[var(--color-normal)] bg-clip-text text-transparent">
               Before Weaponization
             </span>
           </h1>

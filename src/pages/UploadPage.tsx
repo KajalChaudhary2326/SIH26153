@@ -436,7 +436,7 @@ export function UploadPage() {
                 <button
                   onClick={() => beginProcessing(file.type, file.name, "custom", file.scenarioId)}
                   className="flex-1 flex items-center justify-center gap-1.5 rounded py-1.5 text-[11px] font-bold text-slate-950 shadow-sm hover:opacity-90 transition-all hover:scale-105"
-                  style={{ backgroundColor: file.type === "pcap" ? "#F472B6" : "var(--color-accent)" }}
+                  style={{ backgroundColor: file.type === "pcap" ? "var(--color-mitre-initial)" : "var(--color-accent)" }}
                 >
                   <Zap size={12} />
                   <span>Launch Forecast</span>
