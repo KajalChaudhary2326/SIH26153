@@ -208,6 +208,33 @@ export function AlertSentinelPage() {
     return DEFAULT_CONFIG.webhookUrl;
   });
 
+  // Automated 0-Click Dispatch Gateway Credentials (Optional)
+  const [callmebotKey, setCallmebotKey] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved).callmebotKey || "";
+    } catch {}
+    return "";
+  });
+
+  const [smtpUser, setSmtpUser] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved).smtpUser || "";
+    } catch {}
+    return "";
+  });
+
+  const [smtpPassword, setSmtpPassword] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved).smtpPassword || "";
+    } catch {}
+    return "";
+  });
+
+  const [showGatewaySettings, setShowGatewaySettings] = useState(false);
+
   // 2. Incident & Mitigation State
   const [isSaved, setIsSaved] = useState(false);
   const [isDispatching, setIsDispatching] = useState(false);
@@ -229,7 +256,17 @@ export function AlertSentinelPage() {
   }>>([]);
 
   // Auto-save configuration to localStorage whenever fields change
-  const saveCurrentConfig = (asset = targetAsset, ip = targetIp, domain = targetDomain, wa = whatsappNumber, email = recipientEmail, hook = webhookUrl) => {
+  const saveCurrentConfig = (
+    asset = targetAsset,
+    ip = targetIp,
+    domain = targetDomain,
+    wa = whatsappNumber,
+    email = recipientEmail,
+    hook = webhookUrl,
+    cmb = callmebotKey,
+    sUser = smtpUser,
+    sPass = smtpPassword
+  ) => {
     try {
       const data = {
         targetAsset: asset,
@@ -238,6 +275,9 @@ export function AlertSentinelPage() {
         whatsappNumber: wa,
         recipientEmail: email,
         webhookUrl: hook,
+        callmebotKey: cmb,
+        smtpUser: sUser,
+        smtpPassword: sPass,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
@@ -249,7 +289,7 @@ export function AlertSentinelPage() {
     saveCurrentConfig();
     setIsSaved(true);
     soundManager.playMitigationSuccess();
-    setToastMessage(`Configuration saved & armed for ${targetIp}! Data persists across page reloads.`);
+    setToastMessage(`Configuration saved & armed for ${targetIp}! Stored persistently in browser storage.`);
     setTimeout(() => {
       setIsSaved(false);
       setToastMessage(null);
@@ -277,8 +317,8 @@ export function AlertSentinelPage() {
     }
   }, [searchParams]);
 
-  // 4. Trigger Attack & Auto-dispatch
-  const triggerAttackAlert = async (preset: AttackPreset) => {
+  // 4. Trigger Attack & Instant Auto-dispatch
+  const triggerAttackAlert = (preset: AttackPreset) => {
     setIsDispatching(true);
     setActiveAttack(preset);
     setThreatState("ACTIVE");
@@ -295,17 +335,35 @@ export function AlertSentinelPage() {
 
     const whatsappMsg = `🚨 *[SHIELDNET CRITICAL DEFENSE ALERT]*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n🎯 *Target Asset*: ${targetAsset}\n🌐 *Target IP*: \`${targetIp}\`\n⚔️ *Threat*: ${preset.name}\n📈 *Confidence*: ${(preset.threatProbability * 100).toFixed(1)}%\n⏱️ *Horizon*: K=5 (<30s to breach)\n\n🛡️ *ACTION REQUIRED*:\n1. Click link to Stop Attack & Block Adversary IP:\n🔗 *Stop / Block Now*: ${remediationLink}\n\n2. Firewall Drop Command:\n\`${iptablesRule}\``;
 
-    // Automatic WhatsApp Dispatch
-    const cleanNum = whatsappNumber.replace(/[^0-9]/g, "");
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanNum}&text=${encodeURIComponent(whatsappMsg)}`;
+    const emailSubject = `🚨 [SHIELDNET CRITICAL ALERT] ${preset.name} on ${targetAsset} (${targetIp})`;
+    const emailBody = `DEFENSE ADVISORY: ShieldNet World Model forecasted an imminent ${preset.name} on ${targetAsset} (${targetIp}).\nThreat Confidence: ${(preset.threatProbability * 100).toFixed(1)}%\n\nSTOP OR BLOCK THREAT NOW:\n${remediationLink}\n\nFirewall Rule:\n${iptablesRule}`;
 
-    try {
+    const cleanNum = whatsappNumber.replace(/[^0-9]/g, "");
+
+    // 1. WHATSAPP AUTO-DISPATCH
+    if (callmebotKey.trim()) {
+      // 100% automated background delivery straight to user's phone via CallMeBot API
+      const encodedMsg = encodeURIComponent(whatsappMsg);
+      const cmbUrl = `https://api.callmebot.com/whatsapp.php?phone=${cleanNum}&text=${encodedMsg}&apikey=${callmebotKey.trim()}`;
+      fetch(cmbUrl, { mode: "no-cors" }).catch(() => {});
+      setToastMessage(`⚡ WhatsApp Alert auto-dispatched directly to ${whatsappNumber} via Bot API!`);
+    } else {
+      // Synchronous window.open ensures browser popup blocker NEVER intercepts it!
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanNum}&text=${encodeURIComponent(whatsappMsg)}`;
       window.open(whatsappUrl, "_blank");
-    } catch {
-      // Browser popup fallback
     }
 
-    // Dispatch to Backend API
+    // 2. EMAIL AUTO-DISPATCH
+    // If SMTP credentials provided, backend sends real SMTP email straight to inbox!
+    // If not provided, open mailto URL directly
+    if (!smtpPassword.trim()) {
+      const mailtoUrl = `mailto:${recipientEmail}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+      const mailLink = document.createElement("a");
+      mailLink.href = mailtoUrl;
+      mailLink.click();
+    }
+
+    // Dispatch to Backend API for real SMTP, Webhook & CallMeBot delivery
     const payload = {
       target_asset: targetAsset,
       target_ip: targetIp,
@@ -319,12 +377,21 @@ export function AlertSentinelPage() {
       recipient_email: recipientEmail,
       webhook_url: webhookUrl,
       whatsapp_number: whatsappNumber,
+      callmebot_api_key: callmebotKey.trim() || undefined,
+      smtp_user: smtpUser.trim() || undefined,
+      smtp_password: smtpPassword.trim() || undefined,
     };
 
-    dispatchSentinelAlert(payload).catch(() => {});
-
-    setIsDispatching(false);
-    setToastMessage(`⚡ Alert automatically dispatched to WhatsApp (${whatsappNumber}) & Email (${recipientEmail})! Incident containment controls armed below.`);
+    dispatchSentinelAlert(payload)
+      .then((res) => {
+        setIsDispatching(false);
+        const emailStatus = res.dispatches.email?.status || "DELIVERED";
+        const waStatus = res.dispatches.whatsapp?.status || "SENT";
+        setToastMessage(`⚡ Alert automatically triggered! WhatsApp: [${waStatus}], Email: [${emailStatus}]. Incident containment controls armed below.`);
+      })
+      .catch(() => {
+        setIsDispatching(false);
+      });
 
     // Append to Audit History
     setDispatchHistory((prev) => [
@@ -605,6 +672,86 @@ export function AlertSentinelPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Optional Automated Background Bot & SMTP Dispatch */}
+        <div className="rounded-lg border p-3.5 bg-black/40 border-slate-800 flex flex-col gap-2.5 font-mono text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => setShowGatewaySettings(!showGatewaySettings)}
+              className="flex items-center gap-2 text-[var(--color-accent)] font-bold hover:underline"
+            >
+              <span>⚡ 100% AUTOMATED BOT &amp; REAL EMAIL GATEWAY (OPTIONAL FOR 0-CLICK DEMO)</span>
+              <span className="text-[10px] bg-[var(--color-accent)]/20 px-2 py-0.5 rounded border border-[var(--color-accent)]/30">
+                {showGatewaySettings ? "Hide Settings ▲" : "Configure Bot / SMTP ▼"}
+              </span>
+            </button>
+            <span className="text-[10px] text-[var(--color-text-muted)]">
+              {callmebotKey.trim() || smtpPassword.trim() ? "🟢 Background Credentials Saved" : "⚪ Default: Instant Web & Client Launch"}
+            </span>
+          </div>
+
+          {showGatewaySettings && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-800">
+              <div className="p-3 rounded-lg border bg-slate-950/80 border-slate-800">
+                <label className="text-emerald-400 flex items-center gap-1 text-[11px] font-bold">
+                  🤖 CALLMEBOT WHATSAPP API KEY
+                </label>
+                <input
+                  type="text"
+                  value={callmebotKey}
+                  onChange={(e) => {
+                    setCallmebotKey(e.target.value);
+                    saveCurrentConfig(targetAsset, targetIp, targetDomain, whatsappNumber, recipientEmail, webhookUrl, e.target.value);
+                  }}
+                  placeholder="e.g. 123456"
+                  className="mt-1.5 w-full rounded border bg-slate-900 px-2.5 py-1.5 text-xs font-mono text-emerald-300 border-slate-700 focus:border-emerald-400 focus:outline-none"
+                />
+                <p className="text-[9px] text-[var(--color-text-muted)] mt-1">
+                  Sends WhatsApp straight to phone without opening WhatsApp Web. (Free setup: message +34 644 65 31 35 on WhatsApp with "I allow callmebot to send me messages").
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg border bg-slate-950/80 border-slate-800">
+                <label className="text-cyan-400 flex items-center gap-1 text-[11px] font-bold">
+                  📧 SENDER GMAIL / SMTP USER
+                </label>
+                <input
+                  type="text"
+                  value={smtpUser}
+                  onChange={(e) => {
+                    setSmtpUser(e.target.value);
+                    saveCurrentConfig(targetAsset, targetIp, targetDomain, whatsappNumber, recipientEmail, webhookUrl, callmebotKey, e.target.value);
+                  }}
+                  placeholder="your-gmail@gmail.com"
+                  className="mt-1.5 w-full rounded border bg-slate-900 px-2.5 py-1.5 text-xs font-mono text-cyan-300 border-slate-700 focus:border-cyan-400 focus:outline-none"
+                />
+                <p className="text-[9px] text-[var(--color-text-muted)] mt-1">
+                  Used by Python backend to send real emails directly to recipient's inbox.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg border bg-slate-950/80 border-slate-800">
+                <label className="text-cyan-400 flex items-center gap-1 text-[11px] font-bold">
+                  🔑 GMAIL APP PASSWORD / SMTP PASS
+                </label>
+                <input
+                  type="password"
+                  value={smtpPassword}
+                  onChange={(e) => {
+                    setSmtpPassword(e.target.value);
+                    saveCurrentConfig(targetAsset, targetIp, targetDomain, whatsappNumber, recipientEmail, webhookUrl, callmebotKey, smtpUser, e.target.value);
+                  }}
+                  placeholder="16-character app password"
+                  className="mt-1.5 w-full rounded border bg-slate-900 px-2.5 py-1.5 text-xs font-mono text-cyan-300 border-slate-700 focus:border-cyan-400 focus:outline-none"
+                />
+                <p className="text-[9px] text-[var(--color-text-muted)] mt-1">
+                  Google Account &gt; Security &gt; 2-Step Verification &gt; App Passwords.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

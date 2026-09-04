@@ -1212,6 +1212,11 @@ export interface SentinelAlertPayload {
   recipient_email?: string;
   webhook_url?: string;
   whatsapp_number?: string;
+  callmebot_api_key?: string;
+  smtp_host?: string;
+  smtp_port?: number;
+  smtp_user?: string;
+  smtp_password?: string;
 }
 
 export interface SentinelAlertDispatchResponse {
