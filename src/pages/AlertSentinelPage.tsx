@@ -345,7 +345,48 @@ export function AlertSentinelPage() {
       fetch(cmbUrl, { mode: "no-cors" }).catch(() => {});
     }
 
-    // 2. Automated Silent Dispatch via Backend API (Zero disruptive popups)
+    // 2. REAL DIRECT EMAIL DISPATCH (FormSubmit HTTP API to recipient inbox)
+    if (recipientEmail && recipientEmail.includes("@")) {
+      fetch(`https://formsubmit.co/ajax/${encodeURIComponent(recipientEmail)}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          name: "ShieldNet Autonomous Sentinel",
+          _subject: `🚨 [SHIELDNET CRITICAL ALERT] ${preset.name} on ${targetAsset} (${targetIp})`,
+          target_asset: targetAsset,
+          target_ip: targetIp,
+          adversary_ip: preset.attackerIp,
+          threat_name: preset.name,
+          threat_confidence: `${(preset.threatProbability * 100).toFixed(1)}%`,
+          mitre_stage: preset.mitreStage,
+          remediation_link: remediationLink,
+          message: `ShieldNet World Model forecasted an imminent ${preset.name} targeting ${targetAsset} (${targetIp}). Threat Confidence: ${(preset.threatProbability * 100).toFixed(1)}%.\n\nImmediate mitigation link:\n${remediationLink}\n\nFirewall Policy:\n${iptablesRule}`,
+        }),
+      }).catch(() => {});
+    }
+
+    // 3. NATIVE DESKTOP / MOBILE NOTIFICATION
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "granted") {
+        new Notification(`🚨 [SHIELDNET ALERT] ${preset.name}`, {
+          body: `High-confidence attack on ${targetIp}! Click to secure asset.`,
+          icon: "/favicon.ico",
+        });
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then((perm) => {
+          if (perm === "granted") {
+            new Notification(`🚨 [SHIELDNET ALERT] ${preset.name}`, {
+              body: `High-confidence attack on ${targetIp}! Click to secure asset.`,
+            });
+          }
+        });
+      }
+    }
+
+    // 4. Automated Silent Dispatch via Backend API (Zero disruptive popups)
     const payload = {
       target_asset: targetAsset,
       target_ip: targetIp,
@@ -368,7 +409,7 @@ export function AlertSentinelPage() {
       .then((res) => {
         setIsDispatching(false);
         setToastMessage(
-          `⚡ Alert transmitted to WhatsApp (${whatsappNumber}) [${res.dispatches.whatsapp?.status || "SENT"}] & Email (${recipientEmail}) [${res.dispatches.email?.status || "DELIVERED"}]! Incident containment controls armed below.`
+          `⚡ Alert transmitted to WhatsApp (${whatsappNumber}) [${res.dispatches.whatsapp?.status || "SENT"}] & Email (${recipientEmail})! Check your email inbox. Incident containment controls armed below.`
         );
       })
       .catch(() => {
