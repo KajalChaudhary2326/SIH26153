@@ -19,6 +19,7 @@ import {
   Send,
   Layers,
 } from "lucide-react";
+import { soundManager } from "../utils/soundEffects";
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -74,7 +75,7 @@ export function LiveMonitorPage() {
   const [showAlertModal, setShowAlertModal] = useState(false);
 
   // Feature 3: Autonomous Firewall Rule Synthesizer State
-  const [selectedFirewallTab, setSelectedFirewallTab] = useState<"iptables" | "nftables" | "netsh" | "cisco" | "cloudflare">("iptables");
+  const [selectedFirewallTab, setSelectedFirewallTab] = useState<"iptables" | "nftables" | "netsh" | "cisco" | "cloudflare" | "ebpf">("iptables");
   const [copiedRule, setCopiedRule] = useState(false);
   const [isMitigationActive, setIsMitigationActive] = useState(false);
 
@@ -290,6 +291,21 @@ export function LiveMonitorPage() {
       expression: `(ip.src eq ${adversaryIp} and http.host eq "${assetDomain}")`,
       description: `Pre-emptive mitigation forecasted by ShieldNet World Model for ${assetDomain}`
     }, null, 2),
+    ebpf: `// eBPF XDP Zero-Copy NIC Driver Hook (Sub-1µs Line-Rate Kernel Bypass)
+SEC("xdp")
+int xdp_shieldnet_drop(struct xdp_md *ctx) {
+    void *data = (void *)(long)ctx->data;
+    void *data_end = (void *)(long)ctx->data_end;
+    struct ethhdr *eth = data;
+    if ((void *)(eth + 1) > data_end) return XDP_PASS;
+    if (eth->h_proto != htons(ETH_P_IP)) return XDP_PASS;
+    struct iphdr *ip = (void *)(eth + 1);
+    if ((void *)(ip + 1) > data_end) return XDP_PASS;
+    if (ip->saddr == inet_addr("${adversaryIp}")) {
+        return XDP_DROP; // Instant hardware NIC packet purge
+    }
+    return XDP_PASS;
+}`,
   };
 
   const handleCopyRule = () => {
@@ -300,6 +316,7 @@ export function LiveMonitorPage() {
   };
 
   const handleExecuteMitigation = () => {
+    soundManager.playMitigationSuccess();
     setIsMitigationActive(true);
     setTimeout(() => {
       setIsMitigationActive(false);
@@ -796,8 +813,8 @@ export function LiveMonitorPage() {
         </div>
 
         {/* Tab Selection */}
-        <div className="flex items-center gap-2 border-b pb-2 mb-3" style={{ borderColor: "var(--color-border)" }}>
-          {(["iptables", "nftables", "netsh", "cisco", "cloudflare"] as const).map((tab) => (
+        <div className="flex flex-wrap items-center gap-2 border-b pb-2 mb-3" style={{ borderColor: "var(--color-border)" }}>
+          {(["iptables", "nftables", "netsh", "cisco", "cloudflare", "ebpf"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setSelectedFirewallTab(tab)}
@@ -807,7 +824,17 @@ export function LiveMonitorPage() {
                   : "bg-[var(--color-base)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
               }`}
             >
-              {tab === "iptables" ? "Linux iptables" : tab === "nftables" ? "Linux nftables" : tab === "netsh" ? "Windows Netsh" : tab === "cisco" ? "Cisco IOS ACL" : "Cloudflare WAF"}
+              {tab === "iptables"
+                ? "Linux iptables"
+                : tab === "nftables"
+                ? "Linux nftables"
+                : tab === "netsh"
+                ? "Windows Netsh"
+                : tab === "cisco"
+                ? "Cisco IOS ACL"
+                : tab === "cloudflare"
+                ? "Cloudflare WAF"
+                : "eBPF / XDP (<1µs)"}
             </button>
           ))}
         </div>

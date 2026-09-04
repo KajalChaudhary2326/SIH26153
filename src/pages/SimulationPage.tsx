@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { RotateCcw, Activity, FileText, Sparkles, Bell } from "lucide-react";
+import { RotateCcw, Activity, FileText, Sparkles, Bell, Volume2, VolumeX } from "lucide-react";
 import { ProbabilityTimeline } from "../components/ProbabilityTimeline";
 import { KStepProjection } from "../components/KStepProjection";
 import { FlaggedFlowsList } from "../components/FlaggedFlowsList";
@@ -13,6 +13,9 @@ import { MitreLifecycleTimeline } from "../components/MitreLifecycleTimeline";
 import { DefenseSandboxPanel } from "../components/DefenseSandboxPanel";
 import { IncidentDossierModal } from "../components/IncidentDossierModal";
 import { ShapExplanationCard } from "../components/ShapExplanationCard";
+import { NetworkTopologyVisualizer } from "../components/NetworkTopologyVisualizer";
+import { ExecutiveMemoModal } from "../components/ExecutiveMemoModal";
+import { soundManager } from "../utils/soundEffects";
 import {
   getTimeline,
   getFlaggedFlows,
@@ -44,6 +47,9 @@ export function SimulationPage() {
   const [selectedAction, setSelectedAction] = useState<string>("RESET_CONNECTIONS");
   const [mitreReasoning, setMitreReasoning] = useState<MitreReasoningResponse | null>(null);
   const [isDossierOpen, setIsDossierOpen] = useState(false);
+  const [isMemoOpen, setIsMemoOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [displayMode, setDisplayMode] = useState<"timeline" | "topology">("timeline");
 
   useEffect(() => {
     getSampleSessions().then((sList) => {
@@ -154,7 +160,33 @@ export function SimulationPage() {
           {latestObserved && <MITREStageBadge stage={latestObserved.predictedMitreStage} size="lg" />}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Display Mode Switcher */}
+          <div className="flex rounded-lg border p-0.5 bg-[var(--color-base)] font-mono text-xs" style={{ borderColor: "var(--color-border)" }}>
+            <button
+              onClick={() => setDisplayMode("timeline")}
+              className={`px-2.5 py-1 rounded-md transition-colors ${displayMode === "timeline" ? "bg-[var(--color-accent)] text-slate-950 font-bold" : "text-[var(--color-text-secondary)]"}`}
+            >
+              Timeline (K=5)
+            </button>
+            <button
+              onClick={() => setDisplayMode("topology")}
+              className={`px-2.5 py-1 rounded-md transition-colors ${displayMode === "topology" ? "bg-[var(--color-accent)] text-slate-950 font-bold" : "text-[var(--color-text-secondary)]"}`}
+            >
+              Subnet Topology
+            </button>
+          </div>
+
+          {/* Sound Alert Toggle */}
+          <button
+            onClick={() => setIsMuted(soundManager.toggleMute())}
+            className="inline-flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+            style={{ borderColor: "var(--color-border)" }}
+            title={isMuted ? "Unmute Tactical Sound Alerts" : "Mute Tactical Sound Alerts"}
+          >
+            {isMuted ? <VolumeX size={14} className="text-rose-400" /> : <Volume2 size={14} className="text-emerald-400" />}
+          </button>
+
           <Link
             to="/dashboard/live"
             className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold text-emerald-400 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all shadow-sm"
@@ -163,6 +195,16 @@ export function SimulationPage() {
             <Bell size={13} className="animate-pulse" />
             <span>24/7 WhatsApp Alerts</span>
           </Link>
+
+          <button
+            onClick={() => setIsMemoOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-emerald-300 border border-emerald-500/40 bg-emerald-500/15 transition-all shadow-md hover:scale-105"
+            title="Generate NCIIPC / CERT-In Executive Threat Intelligence Memo"
+          >
+            <FileText size={13} />
+            <span>Executive Memo</span>
+          </button>
+
           <button
             onClick={() => setIsDossierOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-white transition-all shadow-md hover:scale-105"
@@ -171,6 +213,7 @@ export function SimulationPage() {
             <FileText size={13} />
             <span>Sovereign Dossier</span>
           </button>
+
           <button
             onClick={() => setReplayKey((k) => k + 1)}
             className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-panel-raised)]"
@@ -214,54 +257,67 @@ export function SimulationPage() {
       {/* Main Grid: Forecast Timeline & Side Panels */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
         <div className="flex flex-col gap-6">
-          {/* Timeline Chart */}
-          <div
-            className="relative h-84 rounded-xl border p-4"
-            style={{
-              borderColor: isCritical ? "var(--color-critical)" : "var(--color-border)",
-              backgroundColor: "var(--color-panel)",
-              boxShadow: isCritical ? "0 0 18px -8px var(--color-critical)" : "none",
-            }}
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-mono text-xs tracking-wider text-[var(--color-text-secondary)]">
-                THREAT INFILTRATION PROBABILITY P(Attack) &amp; K-STEP FORWARD ROLLOUT
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => document.getElementById("shap-explanation-section")?.scrollIntoView({ behavior: "smooth" })}
-                  className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[10px] font-semibold text-[var(--color-accent)] border-[var(--color-accent)]/40 hover:bg-[var(--color-accent)]/15 transition-all shadow-sm"
-                  title="Jump to SHAP Feature Attribution Breakdown"
-                >
-                  <Sparkles size={12} className="animate-pulse text-[var(--color-accent)]" />
-                  <span>Inspect SHAP Attribution ↓</span>
-                </button>
-                <span className="font-mono text-xs text-[var(--color-accent)]">
-                  {isCritical ? "CRITICAL RISK ELEVATION" : "NORMAL DYNAMICS"}
-                </span>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="flex h-64 items-center justify-center text-xs text-[var(--color-text-muted)]">
-                Loading live state-space trajectory...
-              </div>
-            ) : (
-              <ProbabilityTimeline
-                data={timeline}
-                onPointClick={setSelectedPoint}
-                selectedPredictionId={selectedPoint?.predictionId}
-              />
-            )}
-          </div>
-
-          {/* K-Step Horizon Projection */}
-          {!loading && projectedPoints.length > 0 && (
-            <KStepProjection
-              projectedPoints={projectedPoints}
-              onSelect={setSelectedPoint}
-              selectedPredictionId={selectedPoint?.predictionId}
+          {/* Main Forecast View: Timeline (K=5) or Subnet Lateral Traversal Topology */}
+          {displayMode === "topology" ? (
+            <NetworkTopologyVisualizer
+              attackerIp={currentSession?.host_ip}
+              targetIp={currentSession?.target_ip}
+              scenarioName={currentSession?.name}
+              threatProbability={currentSession?.threat_trajectory?.slice(-1)[0] ?? 0.88}
+              mitigationAction={selectedAction}
             />
+          ) : (
+            <>
+              {/* Timeline Chart */}
+              <div
+                className="relative h-84 rounded-xl border p-4"
+                style={{
+                  borderColor: isCritical ? "var(--color-critical)" : "var(--color-border)",
+                  backgroundColor: "var(--color-panel)",
+                  boxShadow: isCritical ? "0 0 18px -8px var(--color-critical)" : "none",
+                }}
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="font-mono text-xs tracking-wider text-[var(--color-text-secondary)]">
+                    THREAT INFILTRATION PROBABILITY P(Attack) &amp; K-STEP FORWARD ROLLOUT
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => document.getElementById("shap-explanation-section")?.scrollIntoView({ behavior: "smooth" })}
+                      className="flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[10px] font-semibold text-[var(--color-accent)] border-[var(--color-accent)]/40 hover:bg-[var(--color-accent)]/15 transition-all shadow-sm"
+                      title="Jump to SHAP Feature Attribution Breakdown"
+                    >
+                      <Sparkles size={12} className="animate-pulse text-[var(--color-accent)]" />
+                      <span>Inspect SHAP Attribution ↓</span>
+                    </button>
+                    <span className="font-mono text-xs text-[var(--color-accent)]">
+                      {isCritical ? "CRITICAL RISK ELEVATION" : "NORMAL DYNAMICS"}
+                    </span>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="flex h-64 items-center justify-center text-xs text-[var(--color-text-muted)]">
+                    Loading live state-space trajectory...
+                  </div>
+                ) : (
+                  <ProbabilityTimeline
+                    data={timeline}
+                    onPointClick={setSelectedPoint}
+                    selectedPredictionId={selectedPoint?.predictionId}
+                  />
+                )}
+              </div>
+
+              {/* K-Step Horizon Projection */}
+              {!loading && projectedPoints.length > 0 && (
+                <KStepProjection
+                  projectedPoints={projectedPoints}
+                  onSelect={setSelectedPoint}
+                  selectedPredictionId={selectedPoint?.predictionId}
+                />
+              )}
+            </>
           )}
 
           {/* Dynamic Scenario-Specific SHAP Feature Attribution (Immediately explains the graph!) */}
@@ -312,6 +368,17 @@ export function SimulationPage() {
         targetIp={currentSession?.target_ip || "192.168.10.50"}
         predictedClass={currentSession?.ground_truth_label || "SSH-Patator"}
         confidence={currentSession?.threat_trajectory ? currentSession.threat_trajectory.slice(-1)[0] : 0.98}
+      />
+
+      {/* 1-Click NCIIPC / CERT-In Executive Threat Intelligence Memo Modal */}
+      <ExecutiveMemoModal
+        isOpen={isMemoOpen}
+        onClose={() => setIsMemoOpen(false)}
+        scenarioName={currentSession?.name || "Ares Botnet / Infiltration"}
+        hostIp={currentSession?.host_ip || "172.16.0.1"}
+        targetIp={currentSession?.target_ip || "192.168.10.50"}
+        predictedClass={currentSession?.ground_truth_label || "Botnet C2"}
+        confidence={currentSession?.threat_trajectory ? currentSession.threat_trajectory.slice(-1)[0] : 0.94}
       />
     </div>
   );
