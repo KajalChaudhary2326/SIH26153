@@ -1207,6 +1207,8 @@ export interface SentinelAlertPayload {
   threat_probability: number;
   mitre_stage: string;
   notification_channels: string[];
+  attack_id?: string;
+  base_url?: string;
   recipient_email?: string;
   webhook_url?: string;
   whatsapp_number?: string;
@@ -1249,17 +1251,11 @@ export async function dispatchSentinelAlert(payload: SentinelAlertPayload): Prom
   }
 
   const ts = new Date().toISOString();
-  const sessionMap: Record<string, string> = {
-    "Volumetric DDoS Hulk Flood": "sess_dos_hulk",
-    "Botnet C2 Periodic Beacon": "sess_bot_c2",
-    "SSH-Patator Automated Brute Force": "sess_ssh_patator",
-    "NCIIPC CII SCADA Infiltration": "session-scada-grid-exfiltration",
-    "Normal Enterprise Traffic": "sess_benign_normal",
-  };
-  const sessId = sessionMap[payload.attack_type] || "sess_dos_hulk";
-  const remediation_link = `http://localhost:5173/dashboard/simulation?session=${sessId}`;
+  const base = payload.base_url || (typeof window !== "undefined" ? window.location.origin : "https://shieldnet-sih.vercel.app");
+  const attackKey = payload.attack_id || "ddos";
+  const remediation_link = `${base}/dashboard/alerts?attack=${attackKey}&target=${encodeURIComponent(payload.target_ip)}`;
   const iptablesRule = `iptables -I INPUT 1 -s ${payload.attacker_ip} -d ${payload.target_ip} -j DROP -m comment --comment 'ShieldNet Auto-Block ${payload.attack_type}'`;
-  const whatsappMsg = `🚨 *[SHIELDNET CRITICAL DEFENSE ALERT]*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n🎯 *Target Asset*: ${payload.target_asset}\n🌐 *Target IP*: \`${payload.target_ip}\`\n⚔️ *Threat*: ${payload.attack_type}\n📈 *Confidence*: ${(payload.threat_probability * 100).toFixed(1)}%\n⏱️ *Horizon*: K=5 (<30s to breach)\n\n🛡️ *STEP-BY-STEP REMEDIATION*:\n1. Apply IP Drop:\n\`${iptablesRule}\`\n2. Enforce Host Quarantine / Rate Limit\n3. Inspect Live SHAP Feature Breakdown & Sandbox:\n🔗 *Click to Secure*: ${remediation_link}`;
+  const whatsappMsg = `🚨 *[SHIELDNET CRITICAL DEFENSE ALERT]*\n━━━━━━━━━━━━━━━━━━━━━━━━━\n🎯 *Target Asset*: ${payload.target_asset}\n🌐 *Target IP*: \`${payload.target_ip}\`\n⚔️ *Threat*: ${payload.attack_type}\n📈 *Confidence*: ${(payload.threat_probability * 100).toFixed(1)}%\n⏱️ *Horizon*: K=5 (<30s to breach)\n\n🛡️ *ACTION REQUIRED*:\n1. Click to Stop Attack & Block Adversary IP:\n🔗 *Stop / Block Now*: ${remediation_link}\n\n2. Firewall Drop Rule:\n\`${iptablesRule}\``;
 
   return {
     status: "DISPATCH_SUCCESSFUL",
