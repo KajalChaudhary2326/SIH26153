@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { RotateCcw, Activity, FileText, Sparkles, Bell, Volume2, VolumeX } from "lucide-react";
 import { ProbabilityTimeline } from "../components/ProbabilityTimeline";
 import { KStepProjection } from "../components/KStepProjection";
@@ -30,6 +30,9 @@ import { useAppStore } from "../store/useAppStore";
 import type { FlaggedFlow, Severity, TimelinePoint } from "../data/types";
 
 export function SimulationPage() {
+  const [searchParams] = useSearchParams();
+  const querySession = searchParams.get("session");
+
   const activeIngestion = useAppStore((s) => s.activeIngestion);
   const setActiveIngestion = useAppStore((s) => s.setActiveIngestion);
 
@@ -54,19 +57,22 @@ export function SimulationPage() {
   useEffect(() => {
     getSampleSessions().then((sList) => {
       setSessions(sList);
-      if (!activeIngestion && sList.length > 0) {
+      const targetId = querySession || activeIngestion?.matchedScenarioId || activeIngestion?.id || sList[0]?.id || "sess_bot_c2";
+      const matched = sList.find(s => s.id === targetId || s.name.toLowerCase().includes((targetId || "").toLowerCase())) || sList[0];
+      if (matched) {
+        setSelectedSessionId(matched.id);
         setActiveIngestion({
-          id: sList[0].id,
+          id: matched.id,
           sourceType: "csv",
-          filename: sList[0].name,
+          filename: matched.name,
           datasetName: "cic-ids-2018",
           uploadedAt: new Date().toISOString(),
           status: "ready",
+          matchedScenarioId: matched.id,
         });
-        setSelectedSessionId(sList[0].id);
       }
     });
-  }, [activeIngestion, setActiveIngestion]);
+  }, [querySession]);
 
   useEffect(() => {
     const sessId = activeIngestion?.matchedScenarioId || activeIngestion?.id || selectedSessionId;
@@ -341,6 +347,7 @@ export function SimulationPage() {
             scenarioName={currentSession?.name}
             hostIp={currentSession?.host_ip}
             targetIp={currentSession?.target_ip}
+            baselineRisk={currentSession?.threat_trajectory ? currentSession.threat_trajectory.slice(-1)[0] : (latestObserved?.infiltrationProbability ?? 0.88)}
           />
         </div>
 

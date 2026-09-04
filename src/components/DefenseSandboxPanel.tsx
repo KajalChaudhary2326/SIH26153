@@ -9,6 +9,7 @@ interface DefenseSandboxPanelProps {
   scenarioName?: string;
   hostIp?: string;
   targetIp?: string;
+  baselineRisk?: number;
 }
 
 interface ActionProfile {
@@ -81,8 +82,44 @@ export function DefenseSandboxPanel({
   onSelectAction,
   onOpenDossier,
   hostIp = "172.16.0.1",
+  targetIp = "192.168.10.50",
+  baselineRisk = 0.94,
 }: DefenseSandboxPanelProps) {
   const currentProfile = ACTION_PROFILES[selectedAction] || ACTION_PROFILES.RESET_CONNECTIONS;
+
+  // Dynamically calculate unmitigated risk and policy residual risk based on actual scenario probability
+  const unmitigatedRisk = baselineRisk > 0 ? baselineRisk : 0.94;
+  const isBenign = unmitigatedRisk < 0.15;
+  const dynamicDropPct = isBenign
+    ? 0
+    : selectedAction === "MONITOR_ONLY"
+    ? 0
+    : Math.round(currentProfile.riskReduction * 100);
+
+  const dynamicResidual = isBenign
+    ? unmitigatedRisk
+    : selectedAction === "MONITOR_ONLY"
+    ? Math.min(0.999, +(unmitigatedRisk * 1.05).toFixed(3))
+    : Math.max(0.012, +(unmitigatedRisk * (1 - currentProfile.riskReduction)).toFixed(3));
+
+  // Dynamic curves:
+  // Unmitigated curve: escalates or stays steady
+  const unmitPoints = [
+    unmitigatedRisk,
+    Math.min(0.999, +(unmitigatedRisk + (isBenign ? 0.005 : 0.03)).toFixed(3)),
+    Math.min(0.999, +(unmitigatedRisk + (isBenign ? 0.008 : 0.05)).toFixed(3)),
+    Math.min(0.999, +(unmitigatedRisk + (isBenign ? 0.010 : 0.07)).toFixed(3)),
+    Math.min(0.999, +(unmitigatedRisk + (isBenign ? 0.012 : 0.09)).toFixed(3)),
+  ];
+
+  // Mitigated curve: drops steeply towards dynamicResidual
+  const mitPoints = [
+    unmitigatedRisk,
+    Math.max(dynamicResidual, +(unmitigatedRisk * 0.55).toFixed(3)),
+    Math.max(dynamicResidual, +(unmitigatedRisk * 0.28).toFixed(3)),
+    Math.max(dynamicResidual, +(unmitigatedRisk * 0.14).toFixed(3)),
+    dynamicResidual,
+  ];
 
   return (
     <div className="flex flex-col gap-5 rounded-xl border p-5 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
@@ -138,7 +175,7 @@ export function DefenseSandboxPanel({
                     <span className="font-bold text-xs text-[var(--color-text-primary)]">
                       {prof.label.split(" (")[0]}
                     </span>
-                    {isOptimal && (
+                    {isOptimal && !isBenign && (
                       <span className="rounded px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                         RECOMMENDED
                       </span>
@@ -157,7 +194,7 @@ export function DefenseSandboxPanel({
                       Cost: {(prof.cost * 100).toFixed(0)}%
                     </span>
                     <span className={prof.riskReduction > 0.6 ? "text-emerald-400 font-bold" : prof.riskReduction > 0 ? "text-amber-400 font-bold" : "text-rose-400 font-bold"}>
-                      {prof.riskReduction > 0 ? `-${Math.round(prof.riskReduction * 100)}% Risk` : "+0% (Adversary Wins)"}
+                      {prof.riskReduction > 0 && !isBenign ? `-${Math.round(prof.riskReduction * 100)}% Risk` : isBenign ? "Nominal Safe" : "+0% (Adversary Wins)"}
                     </span>
                   </div>
                 </button>
@@ -172,7 +209,7 @@ export function DefenseSandboxPanel({
               <span className="text-emerald-400">READY FOR 1-CLICK DISPATCH</span>
             </div>
             <code className="block text-[var(--color-accent)] font-semibold truncate">
-              {currentProfile.commandPreview.replace("{HOST_IP}", hostIp).replace("{PORT}", "8080/22")}
+              {currentProfile.commandPreview.replace("{HOST_IP}", hostIp).replace("{TARGET_IP}", targetIp).replace("{PORT}", "8080/22")}
             </code>
           </div>
         </div>
@@ -185,7 +222,7 @@ export function DefenseSandboxPanel({
               <span>COUNTERFACTUAL HORIZON</span>
             </div>
             <span className="text-[10px] uppercase text-emerald-400 font-bold font-mono">
-              -{Math.round(currentProfile.riskReduction * 100)}% DROP
+              {dynamicDropPct > 0 ? `-${dynamicDropPct}% DROP` : isBenign ? "BASELINE STABLE" : "NO MITIGATION"}
             </span>
           </div>
 
@@ -193,10 +230,10 @@ export function DefenseSandboxPanel({
           <div className="relative h-44 w-full rounded-lg border p-3 bg-[var(--color-base)] flex flex-col justify-between" style={{ borderColor: "var(--color-border)" }}>
             <div className="flex items-center justify-between text-[10px] font-mono">
               <span className="text-rose-400 flex items-center gap-1">
-                <span className="inline-block w-2.5 h-0.5 bg-rose-500"></span> Unmitigated
+                <span className="inline-block w-2.5 h-0.5 bg-rose-500"></span> Unmitigated ({(unmitPoints[4] * 100).toFixed(1)}%)
               </span>
               <span className="text-emerald-400 flex items-center gap-1">
-                <span className="inline-block w-2.5 h-0.5 bg-emerald-400"></span> {selectedAction.replace("_", " ")}
+                <span className="inline-block w-2.5 h-0.5 bg-emerald-400"></span> {selectedAction.replace("_", " ")} ({(mitPoints[4] * 100).toFixed(1)}%)
               </span>
             </div>
 
@@ -207,29 +244,41 @@ export function DefenseSandboxPanel({
               <line x1="0" y1="50" x2="300" y2="50" stroke="rgba(255,255,255,0.06)" strokeDasharray="3,3" />
               <line x1="0" y1="80" x2="300" y2="80" stroke="rgba(255,255,255,0.06)" strokeDasharray="3,3" />
 
-              {/* Red Unmitigated Line: Escalates to 99% */}
-              <polyline
-                fill="none"
-                stroke="#f43f5e"
-                strokeWidth="2.5"
-                strokeDasharray="4,4"
-                points="10,25 75,18 150,12 225,8 290,5"
-              />
-              <circle cx="290" cy="5" r="3" fill="#f43f5e" />
-
-              {/* Green/Cyan Mitigated Line: Plummets based on selected action! */}
+              {/* Dynamic Red Unmitigated Line */}
               {(() => {
-                const traj = currentProfile.trajectory;
-                // Scale traj (0.0 to 1.0) into Y coordinates (90 = low risk, 10 = high risk)
-                const pts = traj
+                const pts = unmitPoints
                   .map((val, idx) => {
                     const x = 10 + idx * 70;
-                    const y = 95 - val * 85;
+                    const y = Math.max(5, Math.min(95, 95 - val * 85));
+                    return `${x},${y}`;
+                  })
+                  .join(" ");
+                const finalY = Math.max(5, Math.min(95, 95 - unmitPoints[4] * 85));
+                return (
+                  <>
+                    <polyline
+                      fill="none"
+                      stroke="#f43f5e"
+                      strokeWidth="2.5"
+                      strokeDasharray="4,4"
+                      points={pts}
+                    />
+                    <circle cx="290" cy={finalY} r="3.5" fill="#f43f5e" />
+                  </>
+                );
+              })()}
+
+              {/* Dynamic Green/Cyan Mitigated Line: Plummets based on selected action! */}
+              {(() => {
+                const pts = mitPoints
+                  .map((val, idx) => {
+                    const x = 10 + idx * 70;
+                    const y = Math.max(5, Math.min(95, 95 - val * 85));
                     return `${x},${y}`;
                   })
                   .join(" ");
 
-                const finalY = 95 - traj[4] * 85;
+                const finalY = Math.max(5, Math.min(95, 95 - mitPoints[4] * 85));
                 return (
                   <>
                     <polyline
@@ -259,15 +308,21 @@ export function DefenseSandboxPanel({
           <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-mono">
             <div className="rounded border p-2 bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
               <div className="text-[10px] text-rose-400">UNMITIGATED RISK</div>
-              <div className="mt-0.5 text-base font-bold text-rose-400">99.2% Risk</div>
-              <div className="text-[10px] text-[var(--color-text-muted)]">Full Exfiltration</div>
+              <div className="mt-0.5 text-base font-bold text-rose-400">
+                {(unmitigatedRisk * 100).toFixed(1)}% Risk
+              </div>
+              <div className="text-[10px] text-[var(--color-text-muted)]">
+                {isBenign ? "Normal Stationary Flow" : "Projects Critical Impact"}
+              </div>
             </div>
             <div className="rounded border p-2 bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
               <div className="text-[10px] text-emerald-400">AFTER POLICY</div>
               <div className="mt-0.5 text-base font-bold text-emerald-400">
-                {(currentProfile.residualRisk * 100).toFixed(1)}% Risk
+                {(dynamicResidual * 100).toFixed(1)}% Risk
               </div>
-              <div className="text-[10px] text-emerald-400/80">Attack Neutralized</div>
+              <div className="text-[10px] text-emerald-400/80">
+                {isBenign ? "Baseline Verified" : "Intervention Active"}
+              </div>
             </div>
           </div>
         </div>

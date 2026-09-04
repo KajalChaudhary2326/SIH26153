@@ -291,27 +291,26 @@ export function getDynamicShapProfile(sessionId?: string, filename?: string): Sc
     return SCENARIO_SHAP_PROFILES[sessionId];
   }
 
-  // Check filename clues
-  if (filename) {
-    const fn = filename.toLowerCase();
-    if (fn.includes("botnet") || fn.includes("ares") || fn.includes("ctu")) {
-      return SCENARIO_SHAP_PROFILES.sess_bot_c2;
-    }
-    if (fn.includes("patator") || fn.includes("ssh") || fn.includes("ftp") || fn.includes("brute")) {
-      return SCENARIO_SHAP_PROFILES.sess_ssh_patator;
-    }
-    if (fn.includes("ddos") || fn.includes("hulk") || fn.includes("flood")) {
-      return SCENARIO_SHAP_PROFILES.sess_dos_hulk;
-    }
-    if (fn.includes("scada") || fn.includes("grid") || fn.includes("infil")) {
-      return SCENARIO_SHAP_PROFILES["session-scada-grid-exfiltration"];
-    }
-    if (fn.includes("benign") || fn.includes("normal")) {
-      return SCENARIO_SHAP_PROFILES.sess_benign_normal;
-    }
+  const clean = ((sessionId || "") + " " + (filename || "")).toLowerCase();
+  if (clean.includes("ddos") || clean.includes("hulk") || clean.includes("flood") || clean.includes("dos")) {
+    return SCENARIO_SHAP_PROFILES.sess_dos_hulk;
+  }
+  if (clean.includes("bot") || clean.includes("ares") || clean.includes("ctu") || clean.includes("c2")) {
+    return SCENARIO_SHAP_PROFILES.sess_bot_c2;
+  }
+  if (clean.includes("patator") || clean.includes("ssh") || clean.includes("ftp") || clean.includes("brute")) {
+    return SCENARIO_SHAP_PROFILES.sess_ssh_patator;
+  }
+  if (clean.includes("scada") || clean.includes("grid") || clean.includes("infil") || clean.includes("modbus") || clean.includes("cii")) {
+    return SCENARIO_SHAP_PROFILES["session-scada-grid-exfiltration"];
+  }
+  if (clean.includes("benign") || clean.includes("normal") || clean.includes("baseline")) {
+    return SCENARIO_SHAP_PROFILES.sess_benign_normal;
+  }
+  if (clean.includes("portscan") || clean.includes("recon") || clean.includes("probe")) {
+    return SCENARIO_SHAP_PROFILES.sess_portscan_recon;
   }
 
-  // Fallback to botnet or default
   return SCENARIO_SHAP_PROFILES.sess_bot_c2;
 }
 

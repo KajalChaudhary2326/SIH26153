@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import {
   Play,
   Square,
@@ -8,15 +9,9 @@ import {
   Cpu,
   Server,
   Terminal,
-  Globe,
-  Building2,
   Bell,
-  Mail,
-  MessageSquare,
   Copy,
   Check,
-  AlertTriangle,
-  Send,
   Layers,
 } from "lucide-react";
 import { soundManager } from "../utils/soundEffects";
@@ -54,30 +49,44 @@ export function LiveMonitorPage() {
   const [selectedInterface, setSelectedInterface] = useState("Wi-Fi (802.11ac Adapter - 192.168.1.105)");
   const [attackMode, setAttackMode] = useState<"normal" | "portscan" | "botnet" | "ddos" | "scada">("normal");
 
-  // Feature 1: Enterprise Asset Onboarding & 24/7 Sentinel State
-  const [assetName, setAssetName] = useState("SBI Core Banking Portal & Substation");
-  const [assetDomain, setAssetDomain] = useState("core-banking.sbi.co.in");
-  const [assetIp, setAssetIp] = useState("192.168.10.50");
+  // Monitored Interface Host Defaults
+  const assetIp = "192.168.1.105";
+  const assetDomain = "enterprise-lan.internal";
 
-  // Feature 2: Instant Alert Dispatcher State (Email, Webhook, WhatsApp)
-  const [recipientEmail, setRecipientEmail] = useState("soc-leads@cert-in.gov.in");
-  const [webhookUrl, setWebhookUrl] = useState("https://hooks.slack.com/services/T00/B00/SHIELDNET_SOC");
-  const [whatsappNumber, setWhatsappNumber] = useState("+91 98765 43210");
-  const [lastDispatchedAlert, setLastDispatchedAlert] = useState<{
-    id: string;
-    time: string;
-    threatProb: number;
-    attackType: string;
-    mitreStage: string;
-    channels: string[];
-    isManual?: boolean;
-  } | null>(null);
-  const [showAlertModal, setShowAlertModal] = useState(false);
-
-  // Feature 3: Autonomous Firewall Rule Synthesizer State
+  // Autonomous Firewall Rule Synthesizer State
   const [selectedFirewallTab, setSelectedFirewallTab] = useState<"iptables" | "nftables" | "netsh" | "cisco" | "cloudflare" | "ebpf">("iptables");
   const [copiedRule, setCopiedRule] = useState(false);
   const [isMitigationActive, setIsMitigationActive] = useState(false);
+
+  // Synthesized Firewall Rules for Live Sniffer
+  const adversaryIp = "172.16.0.1";
+  const synthesizedRules = {
+    iptables: `iptables -I INPUT 1 -s ${adversaryIp} -d ${assetIp} -j DROP -m comment --comment "ShieldNet Auto-Block: ${attackMode.toUpperCase()}"`,
+    nftables: `nft add rule inet filter input ip saddr ${adversaryIp} ip daddr ${assetIp} drop`,
+    netsh: `netsh advfirewall firewall add rule name="ShieldNet-Block-${adversaryIp}" dir=in action=block remoteip=${adversaryIp}`,
+    cisco: `access-list 101 deny ip host ${adversaryIp} host ${assetIp}`,
+    cloudflare: JSON.stringify({
+      action: "block",
+      expression: `(ip.src eq ${adversaryIp} and http.host eq "${assetDomain}")`,
+      description: `Pre-emptive mitigation forecasted by ShieldNet World Model for ${assetDomain}`
+    }, null, 2),
+    ebpf: `// eBPF XDP Zero-Copy NIC Driver Hook (Sub-1µs Line-Rate Kernel Bypass)\nSEC("xdp")\nint xdp_shieldnet_drop(struct xdp_md *ctx) {\n    void *data = (void *)(long)ctx->data;\n    void *data_end = (void *)(long)ctx->data_end;\n    struct ethhdr *eth = data;\n    if ((void *)(eth + 1) > data_end) return XDP_PASS;\n    if (eth->h_proto != htons(ETH_P_IP)) return XDP_PASS;\n    struct iphdr *ip = (void *)(eth + 1);\n    if ((void *)(ip + 1) > data_end) return XDP_PASS;\n    if (ip->saddr == inet_addr("${adversaryIp}")) {\n        return XDP_DROP; // Instant hardware NIC packet purge\n    }\n    return XDP_PASS;\n}`,
+  };
+
+  const handleCopyRule = () => {
+    const text = synthesizedRules[selectedFirewallTab];
+    navigator.clipboard.writeText(text);
+    setCopiedRule(true);
+    setTimeout(() => setCopiedRule(false), 2000);
+  };
+
+  const handleExecuteMitigation = () => {
+    soundManager.playMitigationSuccess();
+    setIsMitigationActive(true);
+    setTimeout(() => {
+      setIsMitigationActive(false);
+    }, 8000);
+  };
 
   // Live Metrics
   const [packetsPerSec, setPacketsPerSec] = useState(1240);
@@ -98,14 +107,13 @@ export function LiveMonitorPage() {
       id: "log_init",
       time: new Date().toLocaleTimeString(),
       severity: "normal",
-      message: `24x7 Sentinel sensor active on ${assetDomain} (${assetIp}). 84 telemetry channels synchronized.`,
+      message: `Live line-rate packet sniffer active on ${assetDomain} (${assetIp}). 84 telemetry channels synchronized.`,
       action: "MONITORING",
-      snortRule: 'alert tcp any any -> 192.168.10.50 any (msg:"ShieldNet Sentinel Active"; sid:100001; rev:1;)',
+      snortRule: 'alert tcp any any -> 192.168.1.105 any (msg:"ShieldNet Live Sniffer Active"; sid:100001; rev:1;)',
     },
   ]);
 
   const tickRef = useRef(0);
-  const lastAlertTimeRef = useRef(0);
 
   // Initialize initial 10 points
   useEffect(() => {
@@ -220,19 +228,6 @@ export function LiveMonitorPage() {
         stage = "Reconnaissance";
       }
 
-      // Feature 2: Automated Pre-Emptive Alert Dispatch when Threat >= 0.75
-      if (currentP >= 0.75 && Date.now() - lastAlertTimeRef.current > 12000 && !isMitigationActive) {
-        lastAlertTimeRef.current = Date.now();
-        setLastDispatchedAlert({
-          id: `alert_${Date.now()}`,
-          time: nowStr,
-          threatProb: currentP,
-          attackType: detectedAttack,
-          mitreStage: stage,
-          channels: ["Email", "Webhook", "WhatsApp"],
-        });
-      }
-
       // Rollout projection for K=5
       const newRollout = [
         Math.min(0.999, +(currentP + 0.02).toFixed(3)),
@@ -257,267 +252,41 @@ export function LiveMonitorPage() {
       });
 
       if (newLog) {
-        setEventLogs((prev) => [newLog!, ...prev.slice(0, 19)]);
+        setEventLogs((prev) => [{ ...newLog!, message: `[${detectedAttack}] ${newLog!.message}` }, ...prev.slice(0, 19)]);
       }
     }, 1000);
 
     return () => clearInterval(interval);
   }, [isRunning, attackMode, isMitigationActive, assetIp, assetDomain]);
 
-  // Trigger manual test alert dispatch
-  const handleTestAlertDispatch = () => {
-    const nowStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    setLastDispatchedAlert({
-      id: `alert_${Date.now()}`,
-      time: nowStr,
-      threatProb: threatProb > 0.5 ? threatProb : 0.942,
-      attackType: attackMode !== "normal" ? attackMode.toUpperCase() : "Simulated APT Reconnaissance",
-      mitreStage: mitreStage,
-      channels: ["Email", "Webhook", "WhatsApp"],
-      isManual: true,
-    });
-    setShowAlertModal(true);
-  };
-
-  // Synthesized Firewall Rules
-  const adversaryIp = "172.16.0.1";
-  const synthesizedRules = {
-    iptables: `iptables -I INPUT 1 -s ${adversaryIp} -d ${assetIp} -j DROP -m comment --comment "ShieldNet Auto-Block: ${attackMode.toUpperCase()}"`,
-    nftables: `nft add rule inet filter input ip saddr ${adversaryIp} ip daddr ${assetIp} drop`,
-    netsh: `netsh advfirewall firewall add rule name="ShieldNet-Block-${adversaryIp}" dir=in action=block remoteip=${adversaryIp}`,
-    cisco: `access-list 101 deny ip host ${adversaryIp} host ${assetIp}`,
-    cloudflare: JSON.stringify({
-      action: "block",
-      expression: `(ip.src eq ${adversaryIp} and http.host eq "${assetDomain}")`,
-      description: `Pre-emptive mitigation forecasted by ShieldNet World Model for ${assetDomain}`
-    }, null, 2),
-    ebpf: `// eBPF XDP Zero-Copy NIC Driver Hook (Sub-1µs Line-Rate Kernel Bypass)
-SEC("xdp")
-int xdp_shieldnet_drop(struct xdp_md *ctx) {
-    void *data = (void *)(long)ctx->data;
-    void *data_end = (void *)(long)ctx->data_end;
-    struct ethhdr *eth = data;
-    if ((void *)(eth + 1) > data_end) return XDP_PASS;
-    if (eth->h_proto != htons(ETH_P_IP)) return XDP_PASS;
-    struct iphdr *ip = (void *)(eth + 1);
-    if ((void *)(ip + 1) > data_end) return XDP_PASS;
-    if (ip->saddr == inet_addr("${adversaryIp}")) {
-        return XDP_DROP; // Instant hardware NIC packet purge
-    }
-    return XDP_PASS;
-}`,
-  };
-
-  const handleCopyRule = () => {
-    const text = synthesizedRules[selectedFirewallTab];
-    navigator.clipboard.writeText(text);
-    setCopiedRule(true);
-    setTimeout(() => setCopiedRule(false), 2000);
-  };
-
-  const handleExecuteMitigation = () => {
-    soundManager.playMitigationSuccess();
-    setIsMitigationActive(true);
-    setTimeout(() => {
-      setIsMitigationActive(false);
-    }, 8000);
-  };
-
   return (
     <div className="flex flex-col gap-6 pb-12">
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {/* FEATURE 1: 24/7 AUTONOMOUS SENTINEL: CUSTOM IP & MULTI-CHANNEL DISPATCH PANEL */}
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {/* Banner linking to Dedicated 24/7 Alerts & Custom IP Page */}
       <div
-        className="rounded-xl border p-5 glow-box relative overflow-hidden flex flex-col gap-4"
-        style={{ borderColor: "var(--color-accent)", backgroundColor: "var(--color-panel)" }}
+        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3.5 glow-box"
+        style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}
       >
-        {/* Top Header Row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4" style={{ borderColor: "var(--color-border)" }}>
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--color-accent)]/15 border border-[var(--color-accent)]/30 text-[var(--color-accent)]">
-              <Shield size={22} className="animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-accent)] font-bold">
-                  24/7 AUTONOMOUS SOVEREIGN SENTINEL
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-0.5 font-mono text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
-                  24/7 MONITORING ARMED
-                </span>
-              </div>
-              <h2 className="text-lg font-bold text-[var(--color-text-primary)] mt-0.5">
-                Custom Asset Onboarding &amp; Multi-Channel Early Warning Dispatcher
-              </h2>
-            </div>
+        <div className="flex items-center gap-2.5 font-mono text-xs">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-accent)]/15 border border-[var(--color-accent)]/30 text-[var(--color-accent)]">
+            <Bell size={15} className="animate-pulse" />
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                handleTestAlertDispatch();
-                setShowAlertModal(true);
-              }}
-              className="inline-flex items-center gap-2 rounded-lg px-4 py-2 font-mono text-xs font-bold bg-[var(--color-accent)] text-slate-950 hover:opacity-90 shadow-lg transition-all hover:scale-105"
-            >
-              <Send size={14} />
-              <span>TEST 24/7 DISPATCH (WHATSAPP + EMAIL)</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Section 1: Target IP & Asset Details (Fully User-Editable) */}
-        <div>
-          <div className="text-xs font-mono text-[var(--color-accent)] font-semibold mb-2 flex items-center gap-1.5">
-            <Server size={14} /> 1. CONFIGURE TARGET ASSET &amp; IP ADDRESS TO MONITOR:
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
-            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
-              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
-                <Building2 size={13} className="text-[var(--color-accent)]" /> TARGET ASSET NAME
-              </div>
-              <input
-                type="text"
-                value={assetName}
-                onChange={(e) => setAssetName(e.target.value)}
-                placeholder="e.g. SBI Core Banking Portal"
-                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] border-slate-700 focus:border-[var(--color-accent)] focus:outline-none"
-              />
+          <div>
+            <div className="text-[var(--color-text-primary)] font-bold">
+              Looking for 24/7 Custom IP &amp; WhatsApp Alert Sentinel?
             </div>
-
-            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
-              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
-                <Radio size={13} className="text-emerald-400" /> TARGET SERVER IP / SUBNET
-              </div>
-              <input
-                type="text"
-                value={assetIp}
-                onChange={(e) => setAssetIp(e.target.value)}
-                placeholder="e.g. 192.168.10.50 or 10.0.100.42"
-                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-emerald-400 border-slate-700 focus:border-[var(--color-accent)] focus:outline-none"
-              />
-            </div>
-
-            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
-              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
-                <Globe size={13} className="text-[var(--color-accent)]" /> DOMAIN / PORT IDENTIFIER
-              </div>
-              <input
-                type="text"
-                value={assetDomain}
-                onChange={(e) => setAssetDomain(e.target.value)}
-                placeholder="e.g. core-banking.sbi.co.in"
-                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] border-slate-700 focus:border-[var(--color-accent)] focus:outline-none"
-              />
+            <div className="text-[11px] text-[var(--color-text-muted)]">
+              Bind your custom server IP, WhatsApp number, and SOC email in the dedicated Alerts section.
             </div>
           </div>
         </div>
-
-        {/* Section 2: 24/7 Incident Dispatch Targets (WhatsApp & Email Directly Editable) */}
-        <div>
-          <div className="text-xs font-mono text-[var(--color-accent)] font-semibold mb-2 flex items-center gap-1.5">
-            <Bell size={14} /> 2. CONFIGURE 24/7 ALERT DISPATCH DESTINATIONS (WHATSAPP, EMAIL &amp; SIEM):
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
-            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
-              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
-                <MessageSquare size={13} className="text-emerald-400" /> WHATSAPP INCIDENT NUMBER
-              </div>
-              <input
-                type="text"
-                value={whatsappNumber}
-                onChange={(e) => setWhatsappNumber(e.target.value)}
-                placeholder="+91 98765 43210"
-                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-emerald-400 border-slate-700 focus:border-emerald-400 focus:outline-none"
-              />
-              <div className="text-[10px] text-[var(--color-text-muted)] mt-1">Dispatches critical pre-breach warning via SMS/WhatsApp</div>
-            </div>
-
-            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
-              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
-                <Mail size={13} className="text-cyan-400" /> RECIPIENT SOC EMAIL
-              </div>
-              <input
-                type="text"
-                value={recipientEmail}
-                onChange={(e) => setRecipientEmail(e.target.value)}
-                placeholder="soc-leads@cert-in.gov.in"
-                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs font-bold text-cyan-400 border-slate-700 focus:border-cyan-400 focus:outline-none"
-              />
-              <div className="text-[10px] text-[var(--color-text-muted)] mt-1">Sends forensic dossier &amp; synthesized firewall commands</div>
-            </div>
-
-            <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
-              <div className="text-[var(--color-text-muted)] flex items-center gap-1.5">
-                <Terminal size={13} className="text-purple-400" /> SIEM / WEBHOOK ENDPOINT
-              </div>
-              <input
-                type="text"
-                value={webhookUrl}
-                onChange={(e) => setWebhookUrl(e.target.value)}
-                placeholder="https://hooks.slack.com/services/..."
-                className="mt-1.5 w-full rounded border bg-slate-950 px-2.5 py-1.5 text-xs text-purple-300 border-slate-700 focus:border-purple-400 focus:outline-none"
-              />
-              <div className="text-[10px] text-[var(--color-text-muted)] mt-1">Instant JSON webhook POST on P(Attack) &ge; 0.75</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Sentinel Live Status Bar */}
-        <div className="rounded-lg border p-2.5 bg-black/40 flex flex-wrap items-center justify-between text-xs font-mono" style={{ borderColor: "var(--color-border)" }}>
-          <div className="flex items-center gap-3">
-            <span className="text-[var(--color-text-muted)]">Sentinel Engine:</span>
-            <span className="text-emerald-400 font-bold">● ONLINE (84 Channels Bound)</span>
-            <span className="text-[var(--color-text-muted)]">|</span>
-            <span className="text-[var(--color-text-muted)]">Alert Threshold:</span>
-            <span className="text-rose-400 font-bold">P(Attack) &ge; 75.0%</span>
-          </div>
-          <div className="text-[var(--color-text-secondary)] text-[11px]">
-            Monitored Target: <strong className="text-[var(--color-accent)]">{assetIp}</strong> ({assetDomain})
-          </div>
-        </div>
+        <Link
+          to="/dashboard/alerts"
+          className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 font-mono text-xs font-bold bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition-all shadow-md"
+        >
+          <span>OPEN 24/7 ALERTS TAB</span>
+          <span>&rarr;</span>
+        </Link>
       </div>
-
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {/* FEATURE 2: PRE-EMPTIVE ALERT DISPATCH BANNER (AUTOMATICALLY FIRES ON THREAT) */}
-      {/* ───────────────────────────────────────────────────────────────────────────── */}
-      {lastDispatchedAlert && (
-        <div className="rounded-xl border border-rose-500/50 bg-rose-500/10 p-4 animate-pulse flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/30">
-              <AlertTriangle size={20} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-rose-400 uppercase tracking-wider">
-                  🚨 PRE-EMPTIVE ALERT DISPATCHED TO SOC LEAD & DEFENSE REPOSITORIES
-                </span>
-                <span className="font-mono text-[10px] text-rose-300/80">[{lastDispatchedAlert.time}]</span>
-              </div>
-              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
-                Target: <strong className="text-[var(--color-text-primary)]">{assetDomain} ({assetIp})</strong> · Attack Type: <strong className="text-rose-300">{lastDispatchedAlert.attackType}</strong> · Forecast Confidence: <strong className="text-rose-400">{(lastDispatchedAlert.threatProb * 100).toFixed(1)}%</strong>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono text-[10px] text-emerald-300">
-              <Mail size={11} /> Email: {recipientEmail}
-            </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono text-[10px] text-emerald-300">
-              <MessageSquare size={11} /> WhatsApp: {whatsappNumber}
-            </span>
-            <button
-              onClick={() => setShowAlertModal(true)}
-              className="rounded bg-rose-500/30 hover:bg-rose-500/40 text-rose-200 border border-rose-500/50 px-2.5 py-1 font-mono text-[11px] font-bold"
-            >
-              VIEW PAYLOAD
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Live Sniffer Header & Master Controls */}
       <div
@@ -889,71 +658,6 @@ int xdp_shieldnet_drop(struct xdp_md *ctx) {
         </div>
       </div>
 
-      {/* Alert Dispatch Modal View */}
-      {showAlertModal && lastDispatchedAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-panel)] p-6 max-w-lg w-full shadow-2xl">
-            <div className="flex items-center justify-between mb-4 border-b pb-3 border-[var(--color-border)]">
-              <div className="flex items-center gap-2 text-rose-400 font-bold font-mono text-sm">
-                <Bell size={16} />
-                SOVEREIGN PRE-EMPTIVE ALERT DISPATCH AUDIT
-              </div>
-              <button
-                onClick={() => setShowAlertModal(false)}
-                className="text-[var(--color-text-muted)] hover:text-white font-mono text-xs"
-              >
-                ✕ CLOSE
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-3 font-mono text-xs">
-              <div className="p-2.5 rounded bg-slate-950 border border-slate-800">
-                <div className="text-[var(--color-text-muted)]">RECIPIENT SOC EMAIL:</div>
-                <input
-                  type="text"
-                  value={recipientEmail}
-                  onChange={(e) => setRecipientEmail(e.target.value)}
-                  className="w-full mt-1 rounded bg-slate-900 border border-slate-700 px-2 py-1 text-emerald-400 font-mono text-xs focus:outline-none"
-                />
-                <div className="text-[var(--color-text-secondary)] mt-1">
-                  Subject: 🚨 Infiltration Projected on {assetDomain} ({lastDispatchedAlert.attackType})
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded bg-slate-950 border border-slate-800">
-                <div className="text-[var(--color-text-muted)]">WEBHOOK / SIEM ENDPOINT:</div>
-                <input
-                  type="text"
-                  value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
-                  className="w-full mt-1 rounded bg-slate-900 border border-slate-700 px-2 py-1 text-emerald-400 font-mono text-xs focus:outline-none"
-                />
-                <div className="text-[var(--color-text-secondary)] mt-1">Status: HTTP 200 POST Simulation Verified</div>
-              </div>
-
-              <div className="p-2.5 rounded bg-slate-950 border border-slate-800">
-                <div className="text-[var(--color-text-muted)]">WHATSAPP INCIDENT NOTIFICATION:</div>
-                <input
-                  type="text"
-                  value={whatsappNumber}
-                  onChange={(e) => setWhatsappNumber(e.target.value)}
-                  className="w-full mt-1 rounded bg-slate-900 border border-slate-700 px-2 py-1 text-emerald-400 font-mono text-xs focus:outline-none"
-                />
-                <div className="text-[var(--color-text-secondary)] mt-1">
-                  Message: "Critical attack forecast on {assetDomain} in &lt;30s! Auto-isolation policy available."
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowAlertModal(false)}
-              className="mt-5 w-full rounded-lg bg-[var(--color-accent)] py-2 text-slate-950 font-mono text-xs font-bold"
-            >
-              ACKNOWLEDGE ALERT
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

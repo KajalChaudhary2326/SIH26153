@@ -1,18 +1,20 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, BarChart3, Eye, Upload, Bell } from "lucide-react";
+import { Activity, BarChart3, Eye, Upload, Bell, Radio } from "lucide-react";
 import { UploadPage } from "./UploadPage";
 import { SimulationPage } from "./SimulationPage";
 import { ExplainabilityPage } from "./ExplainabilityPage";
 import { ComparePage } from "./ComparePage";
 import { LiveMonitorPage } from "./LiveMonitorPage";
+import { AlertSentinelPage } from "./AlertSentinelPage";
 
 const tabs = [
   { to: "/dashboard", label: "Upload", icon: Upload, end: true },
-  { to: "/dashboard/live", label: "24/7 Live Sentinel (WhatsApp & Email)", icon: Bell, highlight: true },
+  { to: "/dashboard/live", label: "Live Sniffer", icon: Radio },
   { to: "/dashboard/simulation", label: "Scenario Simulation", icon: Activity },
   { to: "/dashboard/explainability", label: "Explainability", icon: Eye },
   { to: "/dashboard/baseline", label: "Baseline Comparison", icon: BarChart3 },
+  { to: "/dashboard/alerts", label: "24/7 Alerts (WhatsApp & Custom IP)", icon: Bell, highlight: true },
 ];
 
 export function DashboardPage() {
@@ -24,6 +26,7 @@ export function DashboardPage() {
     if (location.pathname === "/dashboard/simulation") return <SimulationPage />;
     if (location.pathname === "/dashboard/explainability") return <ExplainabilityPage />;
     if (location.pathname === "/dashboard/baseline") return <ComparePage />;
+    if (location.pathname === "/dashboard/alerts") return <AlertSentinelPage />;
     return <UploadPage />;
   };
 
