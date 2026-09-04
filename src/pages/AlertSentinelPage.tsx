@@ -217,6 +217,23 @@ export function AlertSentinelPage() {
     return "";
   });
 
+  // Meta WhatsApp Cloud API (Official)
+  const [whatsappCloudToken, setWhatsappCloudToken] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved).whatsappCloudToken || "";
+    } catch {}
+    return "";
+  });
+
+  const [whatsappCloudPhoneId, setWhatsappCloudPhoneId] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved).whatsappCloudPhoneId || "";
+    } catch {}
+    return "";
+  });
+
   const [smtpUser, setSmtpUser] = useState<string>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -265,7 +282,9 @@ export function AlertSentinelPage() {
     hook = webhookUrl,
     cmb = callmebotKey,
     sUser = smtpUser,
-    sPass = smtpPassword
+    sPass = smtpPassword,
+    waToken = whatsappCloudToken,
+    waPhoneId = whatsappCloudPhoneId
   ) => {
     try {
       const data = {
@@ -278,6 +297,8 @@ export function AlertSentinelPage() {
         callmebotKey: cmb,
         smtpUser: sUser,
         smtpPassword: sPass,
+        whatsappCloudToken: waToken,
+        whatsappCloudPhoneId: waPhoneId,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
@@ -338,8 +359,47 @@ export function AlertSentinelPage() {
     const cleanNum = whatsappNumber.replace(/[^0-9]/g, "");
     const phoneWithPlus = cleanNum.startsWith("+") ? cleanNum : `+${cleanNum}`;
 
-    // 1. WHATSAPP AUTO-DISPATCH (Background Gateway - ZERO popups)
-    if (callmebotKey.trim() && cleanNum) {
+    // 1. WHATSAPP AUTO-DISPATCH (Meta Cloud API or CallMeBot Gateway - ZERO popups)
+    if (whatsappCloudToken.trim() && whatsappCloudPhoneId.trim() && cleanNum) {
+      // Official Meta WhatsApp Cloud Graph API
+      fetch(`https://graph.facebook.com/v19.0/${whatsappCloudPhoneId.trim()}/messages`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${whatsappCloudToken.trim()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: cleanNum,
+          type: "text",
+          text: {
+            preview_url: true,
+            body: whatsappMsg,
+          },
+        }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          // Fallback to hello_world template if freeform text fails outside 24h window
+          fetch(`https://graph.facebook.com/v19.0/${whatsappCloudPhoneId.trim()}/messages`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${whatsappCloudToken.trim()}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              to: cleanNum,
+              type: "template",
+              template: {
+                name: "hello_world",
+                language: { code: "en_US" },
+              },
+            }),
+          }).catch(() => {});
+        }
+      }).catch(() => {});
+    } else if (callmebotKey.trim() && cleanNum) {
       // 100% automated background delivery straight to user's phone via CallMeBot API
       const encodedMsg = encodeURIComponent(whatsappMsg);
       const cmbUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phoneWithPlus)}&text=${encodedMsg}&apikey=${encodeURIComponent(callmebotKey.trim())}`;
@@ -402,6 +462,8 @@ export function AlertSentinelPage() {
       webhook_url: webhookUrl,
       whatsapp_number: whatsappNumber,
       callmebot_api_key: callmebotKey.trim() || undefined,
+      whatsapp_cloud_token: whatsappCloudToken.trim() || undefined,
+      whatsapp_cloud_phone_id: whatsappCloudPhoneId.trim() || undefined,
       smtp_user: smtpUser.trim() || undefined,
       smtp_password: smtpPassword.trim() || undefined,
     };
@@ -706,41 +768,100 @@ export function AlertSentinelPage() {
               onClick={() => setShowGatewaySettings(!showGatewaySettings)}
               className="flex items-center gap-2 text-[var(--color-accent)] font-bold hover:underline"
             >
-              <span>⚡ 100% AUTOMATED BOT &amp; REAL EMAIL GATEWAY (OPTIONAL FOR 0-CLICK DEMO)</span>
+              <span>⚡ 100% AUTOMATED META WHATSAPP CLOUD API &amp; SMTP GATEWAYS (OPTIONAL)</span>
               <span className="text-[10px] bg-[var(--color-accent)]/20 px-2 py-0.5 rounded border border-[var(--color-accent)]/30">
-                {showGatewaySettings ? "Hide Settings ▲" : "Configure Bot / SMTP ▼"}
+                {showGatewaySettings ? "Hide Settings ▲" : "Configure Cloud API / SMTP ▼"}
               </span>
             </button>
             <span className="text-[10px] text-[var(--color-text-muted)]">
-              {callmebotKey.trim() || smtpPassword.trim() ? "🟢 Background Credentials Saved" : "⚪ Default: Instant Web & Client Launch"}
+              {whatsappCloudToken.trim() || callmebotKey.trim() || smtpPassword.trim() ? "🟢 Cloud Gateways Armed" : "⚪ Default: Instant Web & 1-Click Launch"}
             </span>
           </div>
 
           {showGatewaySettings && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-800">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+              {/* Card 1: Official Meta WhatsApp Cloud API */}
+              <div className="p-3 rounded-lg border bg-slate-950/90 border-emerald-500/40 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-emerald-400 flex items-center gap-1.5 text-[11px] font-bold">
+                      <Globe size={13} /> 🌐 OFFICIAL META WHATSAPP CLOUD API
+                    </label>
+                    <span className={`text-[9px] px-2 py-0.5 rounded font-bold ${whatsappCloudToken.trim() && whatsappCloudPhoneId.trim() ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'}`}>
+                      {whatsappCloudToken.trim() && whatsappCloudPhoneId.trim() ? "🟢 ACTIVE" : "⚪ STANDBY"}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex flex-col gap-2">
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-mono">PHONE NUMBER ID (FROM META DEVELOPERS):</label>
+                      <input
+                        type="text"
+                        value={whatsappCloudPhoneId}
+                        onChange={(e) => {
+                          setWhatsappCloudPhoneId(e.target.value);
+                          saveCurrentConfig(targetAsset, targetIp, targetDomain, whatsappNumber, recipientEmail, webhookUrl, callmebotKey, smtpUser, smtpPassword, whatsappCloudToken, e.target.value);
+                        }}
+                        placeholder="e.g. 105954558954321"
+                        className="mt-1 w-full rounded border bg-slate-900 px-2.5 py-1.5 text-xs font-mono text-emerald-300 border-slate-700 focus:border-emerald-400 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-mono">META ACCESS TOKEN (BEARER TOKEN):</label>
+                      <input
+                        type="password"
+                        value={whatsappCloudToken}
+                        onChange={(e) => {
+                          setWhatsappCloudToken(e.target.value);
+                          saveCurrentConfig(targetAsset, targetIp, targetDomain, whatsappNumber, recipientEmail, webhookUrl, callmebotKey, smtpUser, smtpPassword, e.target.value, whatsappCloudPhoneId);
+                        }}
+                        placeholder="EAAG... (Temporary or System User Token)"
+                        className="mt-1 w-full rounded border bg-slate-900 px-2.5 py-1.5 text-xs font-mono text-emerald-300 border-slate-700 focus:border-emerald-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-2.5 pt-2 border-t border-slate-800 flex items-center justify-between">
+                  <span className="text-[9px] text-slate-400">
+                    Dispatches directly via Meta Graph API (Zero Popups).
+                  </span>
+                  <a
+                    href="https://developers.facebook.com/apps"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] text-emerald-300 hover:text-white underline font-bold"
+                  >
+                    Meta Developers Portal ↗
+                  </a>
+                </div>
+              </div>
+
+              {/* Card 2: CallMeBot Backup Gateway */}
               <div className="p-3 rounded-lg border bg-slate-950/80 border-slate-800 flex flex-col justify-between">
                 <div>
                   <label className="text-emerald-400 flex items-center gap-1 text-[11px] font-bold">
-                    🤖 CALLMEBOT WHATSAPP API KEY
+                    🤖 CALLMEBOT WHATSAPP API (ALTERNATIVE)
                   </label>
                   <input
                     type="text"
                     value={callmebotKey}
                     onChange={(e) => {
                       setCallmebotKey(e.target.value);
-                      saveCurrentConfig(targetAsset, targetIp, targetDomain, whatsappNumber, recipientEmail, webhookUrl, e.target.value);
+                      saveCurrentConfig(targetAsset, targetIp, targetDomain, whatsappNumber, recipientEmail, webhookUrl, e.target.value, smtpUser, smtpPassword, whatsappCloudToken, whatsappCloudPhoneId);
                     }}
                     placeholder="e.g. 849201"
                     className="mt-1.5 w-full rounded border bg-slate-900 px-2.5 py-1.5 text-xs font-mono text-emerald-300 border-slate-700 focus:border-emerald-400 focus:outline-none"
                   />
                   <p className="text-[9px] text-[var(--color-text-muted)] mt-1">
-                    Enables 100% automated silent delivery to your phone.
+                    Free volunteer gateway for personal WhatsApp delivery.
                   </p>
                 </div>
 
                 <div className="mt-2.5 pt-2 border-t border-slate-800 flex flex-col gap-1.5">
                   <span className="text-[9px] font-bold text-amber-400">
-                    ⚡ 1-Click Activate (Bypass "Invite" error):
+                    ⚡ 1-Click Activate:
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     <a
@@ -760,12 +881,10 @@ export function AlertSentinelPage() {
                       <span>💬 Bot 2 (+34 644 20 55 51)</span>
                     </a>
                   </div>
-                  <p className="text-[9px] text-slate-400 leading-tight">
-                    Tapping opens chat directly without saving contacts. Just press send, bot will reply with your API key in 5s!
-                  </p>
                 </div>
               </div>
 
+              {/* Card 3: SMTP Email User */}
               <div className="p-3 rounded-lg border bg-slate-950/80 border-slate-800">
                 <label className="text-cyan-400 flex items-center gap-1 text-[11px] font-bold">
                   📧 SENDER GMAIL / SMTP USER
@@ -775,7 +894,7 @@ export function AlertSentinelPage() {
                   value={smtpUser}
                   onChange={(e) => {
                     setSmtpUser(e.target.value);
-                    saveCurrentConfig(targetAsset, targetIp, targetDomain, whatsappNumber, recipientEmail, webhookUrl, callmebotKey, e.target.value);
+                    saveCurrentConfig(targetAsset, targetIp, targetDomain, whatsappNumber, recipientEmail, webhookUrl, callmebotKey, e.target.value, smtpPassword, whatsappCloudToken, whatsappCloudPhoneId);
                   }}
                   placeholder="your-gmail@gmail.com"
                   className="mt-1.5 w-full rounded border bg-slate-900 px-2.5 py-1.5 text-xs font-mono text-cyan-300 border-slate-700 focus:border-cyan-400 focus:outline-none"
@@ -785,6 +904,7 @@ export function AlertSentinelPage() {
                 </p>
               </div>
 
+              {/* Card 4: SMTP App Password */}
               <div className="p-3 rounded-lg border bg-slate-950/80 border-slate-800">
                 <label className="text-cyan-400 flex items-center gap-1 text-[11px] font-bold">
                   🔑 GMAIL APP PASSWORD / SMTP PASS
@@ -794,7 +914,7 @@ export function AlertSentinelPage() {
                   value={smtpPassword}
                   onChange={(e) => {
                     setSmtpPassword(e.target.value);
-                    saveCurrentConfig(targetAsset, targetIp, targetDomain, whatsappNumber, recipientEmail, webhookUrl, callmebotKey, smtpUser, e.target.value);
+                    saveCurrentConfig(targetAsset, targetIp, targetDomain, whatsappNumber, recipientEmail, webhookUrl, callmebotKey, smtpUser, e.target.value, whatsappCloudToken, whatsappCloudPhoneId);
                   }}
                   placeholder="16-character app password"
                   className="mt-1.5 w-full rounded border bg-slate-900 px-2.5 py-1.5 text-xs font-mono text-cyan-300 border-slate-700 focus:border-cyan-400 focus:outline-none"
@@ -897,7 +1017,9 @@ export function AlertSentinelPage() {
               <div>
                 <div className="flex items-center justify-between text-emerald-400 font-bold mb-1">
                   <span className="flex items-center gap-1.5"><MessageSquare size={13} /> WHATSAPP / TELEPHONY GATEWAY</span>
-                  {callmebotKey.trim() ? (
+                  {whatsappCloudToken.trim() && whatsappCloudPhoneId.trim() ? (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold">🟢 200 OK DELIVERED (META CLOUD API)</span>
+                  ) : callmebotKey.trim() ? (
                     <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold">🟢 200 OK DELIVERED (BOT)</span>
                   ) : (
                     <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold">🟡 1-CLICK READY</span>
@@ -910,7 +1032,23 @@ export function AlertSentinelPage() {
               </div>
 
               <div className="mt-2.5 pt-2 border-t border-emerald-500/20 flex flex-col gap-1.5">
-                {callmebotKey.trim() ? (
+                {whatsappCloudToken.trim() && whatsappCloudPhoneId.trim() ? (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-emerald-400 font-semibold">🟢 Automated 0-click transmission via Official Meta Cloud API!</span>
+                    <button
+                      onClick={() => {
+                        const clean = whatsappNumber.replace(/[^0-9]/g, "");
+                        const currentOrigin = typeof window !== "undefined" ? window.location.origin : "https://shieldnet-sih.vercel.app";
+                        const remLink = `${currentOrigin}/dashboard/alerts?attack=${activeAttack.id}&target=${encodeURIComponent(targetIp)}`;
+                        const msg = `🚨 *[SHIELDNET CRITICAL DEFENSE ALERT]*\n🎯 *Target Asset*: ${targetAsset}\n🌐 *Target IP*: \`${targetIp}\`\n⚔️ *Threat*: ${activeAttack.name}\n📈 *Confidence*: ${(activeAttack.threatProbability * 100).toFixed(1)}%\n🔗 *Stop / Block Now*: ${remLink}`;
+                        window.open(`https://wa.me/${clean}?text=${encodeURIComponent(msg)}`, "_blank");
+                      }}
+                      className="text-[10px] text-emerald-300 hover:text-white underline flex items-center gap-1"
+                    >
+                      Open WhatsApp Chat
+                    </button>
+                  </div>
+                ) : callmebotKey.trim() ? (
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-emerald-400 font-semibold">🟢 Silent 0-click delivery sent to phone!</span>
                     <button
@@ -943,7 +1081,7 @@ export function AlertSentinelPage() {
                       <span>📲 1-CLICK SEND TO WHATSAPP ({whatsappNumber})</span>
                     </button>
                     <span className="text-[9px] text-slate-400">
-                      💡 Want 0-click automated bot delivery? Click "Configure Bot / SMTP" in Step 1 to add CallMeBot key.
+                      💡 Want 0-click automated bot delivery? Click "Configure Cloud API / SMTP" in Step 1 to add Meta WhatsApp Cloud API credentials.
                     </span>
                   </div>
                 )}

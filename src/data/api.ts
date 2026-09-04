@@ -1213,6 +1213,8 @@ export interface SentinelAlertPayload {
   webhook_url?: string;
   whatsapp_number?: string;
   callmebot_api_key?: string;
+  whatsapp_cloud_token?: string;
+  whatsapp_cloud_phone_id?: string;
   smtp_host?: string;
   smtp_port?: number;
   smtp_user?: string;
