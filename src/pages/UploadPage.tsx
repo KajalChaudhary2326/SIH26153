@@ -1,8 +1,7 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, FileStack, CheckCircle2, Upload, Activity, ArrowRight, Download, Zap, ShieldAlert } from "lucide-react";
-import { getSampleSessions, type ScenarioSession } from "../data/api";
+import { FileText, FileStack, CheckCircle2, Upload, Download, Zap, ShieldAlert, Shield, Database, Cpu, Radio, Lock, Activity } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import type { DatasetName, IngestionStatus, SourceType } from "../data/types";
 
@@ -13,94 +12,136 @@ const PROCESSING_STEPS: { status: IngestionStatus; label: string }[] = [
   { status: "ready", label: "World Model inference & K-step forecast ready" },
 ];
 
-const SAMPLE_FILES = [
+interface SampleTelemetryFile {
+  name: string;
+  type: SourceType;
+  size: string;
+  scenarioId: string;
+  label: string;
+  desc: string;
+  severity: "critical" | "elevated" | "normal";
+  host_ip: string;
+  target_ip: string;
+  ground_truth: string;
+  category: "attack" | "pcap" | "cii" | "benign";
+}
+
+const SAMPLE_FILES: SampleTelemetryFile[] = [
   {
     name: "1_BENIGN_Normal_Enterprise_Traffic.csv",
-    type: "csv" as SourceType,
+    type: "csv",
     size: "17.2 KB",
     scenarioId: "sess_benign_normal",
-    label: "Normal Enterprise Baseline",
-    desc: "Stationary benign HTTPS/TLS & DNS telemetry (Threat Prob: 1-3%)",
+    label: "Normal Enterprise Workstation Baseline",
+    desc: "Stationary benign HTTPS/TLS & DNS queries. Baseline equilibrium with zero anomalous progression.",
     severity: "normal",
+    host_ip: "192.168.10.15",
+    target_ip: "192.168.10.1",
+    ground_truth: "BENIGN (Normal Browsing)",
+    category: "benign",
   },
   {
     name: "2_Botnet_Ares_C2_Periodic_Beacon.csv",
-    type: "csv" as SourceType,
+    type: "csv",
     size: "17.3 KB",
     scenarioId: "sess_bot_c2",
-    label: "Ares/Mirai Botnet C2 Reverse Shell",
-    desc: "Low-jitter periodic heartbeat beacons to external C2 controller",
+    label: "Botnet C2 Periodic Beaconing (ARES/Mirai)",
+    desc: "Low-jitter periodic heartbeat beacons to external C2 controller with subtle payload expansion.",
     severity: "critical",
+    host_ip: "192.168.10.14",
+    target_ip: "172.16.0.1",
+    ground_truth: "Botnet C2 (MITRE T1071)",
+    category: "attack",
   },
   {
     name: "3_SSH_FTP_Patator_BruteForce.csv",
-    type: "csv" as SourceType,
+    type: "csv",
     size: "17.2 KB",
     scenarioId: "sess_ssh_patator",
-    label: "SSH/FTP Multi-Stage Brute Force",
-    desc: "High-frequency dictionary credential assault on Port 22/21",
+    label: "SSH-Patator Automated Credential Assault",
+    desc: "High-frequency dictionary brute force authentication attacking Port 22 with RST flag storms.",
     severity: "critical",
+    host_ip: "192.168.10.8",
+    target_ip: "192.168.10.50",
+    ground_truth: "SSH-Patator (MITRE T1110)",
+    category: "attack",
   },
   {
     name: "4_Volumetric_DDoS_Hulk_Flood.csv",
-    type: "csv" as SourceType,
+    type: "csv",
     size: "12.3 KB",
     scenarioId: "sess_slowloris_dos",
-    label: "Volumetric HTTP Exhaustion Flood",
-    desc: "Massive socket pool exhaustion attacking Apache web service",
+    label: "Slowloris & HTTP Volumetric Exhaustion",
+    desc: "Massive socket pool exhaustion holding incomplete HTTP GET headers, starving enterprise web servers.",
     severity: "critical",
+    host_ip: "192.168.10.5",
+    target_ip: "192.168.10.50",
+    ground_truth: "DoS Hulk / Slowloris (MITRE T1498)",
+    category: "attack",
   },
   {
     name: "5_CII_SCADA_Infiltration_Attack.csv",
-    type: "csv" as SourceType,
+    type: "csv",
     size: "17.2 KB",
     scenarioId: "session-scada-grid-exfiltration",
-    label: "NCIIPC CII Power Grid Substation Intrusion",
-    desc: "Unauthorized Modbus/DNP3 industrial gateway command injection",
+    label: "NCIIPC Power Grid Substation Intrusion",
+    desc: "Unauthorized Modbus/DNP3 industrial gateway command injection and ICS coil read/write bursts.",
     severity: "critical",
+    host_ip: "10.0.100.42",
+    target_ip: "192.168.10.50",
+    ground_truth: "CII SCADA Infiltration (MITRE T0814)",
+    category: "cii",
   },
   {
     name: "sample_enterprise_capture.pcap",
-    type: "pcap" as SourceType,
+    type: "pcap",
     size: "0.35 KB",
     scenarioId: "sess_ssh_patator",
     label: "Enterprise Raw Packet Capture (.pcap)",
-    desc: "Wireshark packet capture with raw TCP SYN/ACK/SSH handshake headers",
+    desc: "Raw tcpdump/Wireshark packet capture with TCP SYN/ACK handshakes and packet micro-dynamics.",
     severity: "elevated",
+    host_ip: "192.168.1.105",
+    target_ip: "192.168.1.1",
+    ground_truth: "Enterprise Traffic Stream",
+    category: "pcap",
   },
   {
     name: "sample_scada_modbus.pcap",
-    type: "pcap" as SourceType,
+    type: "pcap",
     size: "0.84 KB",
     scenarioId: "session-scada-grid-exfiltration",
     label: "SCADA Modbus ICS Packet Stream (.pcap)",
-    desc: "Industrial telemetry packets on Port 502 with coil read/write queries",
+    desc: "Industrial telemetry packets on Port 502 with coil read/write queries and function codes.",
     severity: "critical",
+    host_ip: "10.0.100.42",
+    target_ip: "192.168.10.50",
+    ground_truth: "Industrial Modbus/TCP",
+    category: "pcap",
   },
   {
     name: "outside_darpa1998_military.pcap",
-    type: "pcap" as SourceType,
+    type: "pcap",
     size: "185 KB",
     scenarioId: "sess_ssh_patator",
     label: "DARPA 1998 Military Intrusion (.pcap)",
-    desc: "Authentic US Department of Defense military cyber range packet trace with raw IP/TCP packets (PS Clause 64)",
+    desc: "Authentic US Department of Defense military cyber range packet trace with raw IP/TCP packets (PS Clause 64).",
     severity: "critical",
+    host_ip: "172.16.112.50",
+    target_ip: "172.16.114.168",
+    ground_truth: "Military Cyber Range Attack",
+    category: "pcap",
   },
 ];
 
 export function UploadPage() {
   const navigate = useNavigate();
   const setActiveIngestion = useAppStore((s) => s.setActiveIngestion);
-  const [sessions, setSessions] = useState<ScenarioSession[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState<"all" | "attack" | "cii" | "pcap" | "benign">("all");
   const [processing, setProcessing] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [pendingSource, setPendingSource] = useState<{ type: SourceType; filename: string; dataset: DatasetName } | null>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const pcapInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    getSampleSessions().then(setSessions);
-  }, []);
 
   function detectScenarioId(filename: string): string {
     const fn = filename.toLowerCase();
@@ -282,70 +323,123 @@ export function UploadPage() {
         </div>
       </div>
 
-      {/* Cruel Testing: 1-Click Downloadable & Testable Telemetry Suite */}
-      <div className="rounded-xl border p-5 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 mb-4" style={{ borderColor: "var(--color-border)" }}>
+      {/* PRE-LOADED OFFLINE TELEMETRY & ATTACK BENCHMARK SUITE */}
+      <div className="rounded-xl border p-5 glow-box flex flex-col gap-4" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3" style={{ borderColor: "var(--color-border)" }}>
           <div className="flex items-center gap-2">
             <ShieldAlert size={18} className="text-[var(--color-accent)]" />
             <div>
               <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                VERIFIED TELEMETRY TEST SUITE (1-CLICK DOWNLOAD &amp; CRUEL TESTING)
+                PRE-LOADED OFFLINE TELEMETRY &amp; ATTACK BENCHMARK SUITE
               </h2>
-              <p className="text-xs text-[var(--color-text-muted)]">
-                Download sample CSV/PCAP files to test uploading, or click "Test Ingest" to simulate live pipeline execution instantly.
+              <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                Multi-stage network sessions and raw PCAP captures verified against ground-truth labels (Constraint C4). Click "Launch Forecast" to simulate World Model forward rollout instantly.
               </p>
             </div>
           </div>
           <span className="font-mono text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/30">
-            7 TEST PACKAGES READY
+            8 SESSIONS · OFFLINE READY (C4)
           </span>
         </div>
 
+        {/* Category Filter Tabs */}
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { id: "all", label: "All Telemetry (8)" },
+            { id: "attack", label: "⚔️ Attack Scenarios (5)" },
+            { id: "cii", label: "⚡ Critical CII SCADA (1)" },
+            { id: "pcap", label: "🦈 Raw PCAP Captures (3)" },
+            { id: "benign", label: "🟢 Benign Baseline (1)" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setSelectedFilter(tab.id as any)}
+              className={`px-3 py-1 rounded-md font-mono text-xs font-semibold transition-all ${
+                selectedFilter === tab.id
+                  ? "bg-[var(--color-accent)] text-slate-950 shadow-sm"
+                  : "bg-[var(--color-base)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Grid of Telemetry Cards */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {SAMPLE_FILES.map((file) => (
+          {SAMPLE_FILES.filter(
+            (f) =>
+              selectedFilter === "all" ||
+              f.category === selectedFilter ||
+              (selectedFilter === "attack" && (f.category === "attack" || f.category === "cii"))
+          ).map((file) => (
             <div
               key={file.name}
-              className="flex flex-col justify-between rounded-lg border p-3.5 bg-[var(--color-base)] hover:border-[var(--color-accent)] transition-all"
+              className="flex flex-col justify-between rounded-lg border p-4 bg-[var(--color-base)] hover:border-[var(--color-accent)] transition-all group"
               style={{ borderColor: "var(--color-border)" }}
             >
               <div>
-                <div className="flex items-center justify-between mb-1.5 font-mono text-[10px]">
-                  <span className={`rounded px-1.5 py-0.5 font-bold ${
-                    file.type === "pcap" ? "bg-pink-500/20 text-pink-300" : "bg-cyan-500/20 text-cyan-300"
+                {/* Header badges */}
+                <div className="flex items-center justify-between mb-2 font-mono text-[10px]">
+                  <span className={`rounded px-2 py-0.5 font-bold ${
+                    file.type === "pcap" ? "bg-pink-500/20 text-pink-300 border border-pink-500/30" : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
                   }`}>
                     {file.type.toUpperCase()} · {file.size}
                   </span>
-                  <span className={file.severity === "critical" ? "text-rose-400 font-semibold" : "text-emerald-400 font-semibold"}>
+                  <span className={`rounded px-1.5 py-0.5 font-bold ${
+                    file.severity === "critical"
+                      ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                      : file.severity === "elevated"
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                      : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  }`}>
                     {file.severity.toUpperCase()}
                   </span>
                 </div>
-                <h4 className="text-xs font-semibold text-[var(--color-text-primary)] mb-1">
+
+                {/* Title */}
+                <h4 className="text-xs font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] mb-1">
                   {file.label}
                 </h4>
-                <p className="text-[11px] font-mono text-[var(--color-text-muted)] mb-2 truncate">
-                  {file.name}
-                </p>
+
+                {/* Subnet Route */}
+                <div className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--color-text-muted)] mb-2">
+                  <span className="text-[var(--color-text-secondary)]">{file.host_ip}</span>
+                  <span>→</span>
+                  <span className="text-[var(--color-accent)]">{file.target_ip}</span>
+                </div>
+
+                {/* Ground Truth Label */}
+                <div className="mb-2">
+                  <span className="inline-block font-mono text-[10px] text-purple-300 bg-purple-500/15 px-2 py-0.5 rounded border border-purple-500/25">
+                    {file.ground_truth}
+                  </span>
+                </div>
+
+                {/* Description */}
                 <p className="text-[11px] text-[var(--color-text-secondary)] line-clamp-2 mb-3">
                   {file.desc}
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 pt-2 border-t border-white/5 font-mono text-xs">
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 pt-2.5 border-t font-mono text-xs" style={{ borderColor: "var(--color-border)" }}>
                 <a
                   href={`/sample_telemetry/${file.name}`}
                   download={file.name}
-                  className="flex-1 flex items-center justify-center gap-1 rounded py-1.5 bg-white/5 text-[var(--color-text-primary)] hover:bg-white/10 text-[11px] border border-white/10"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded py-1.5 bg-white/5 hover:bg-white/10 text-[var(--color-text-primary)] text-[11px] border border-white/10 transition-colors"
                 >
-                  <Download size={11} />
+                  <Download size={12} />
                   <span>Download</span>
                 </a>
                 <button
                   onClick={() => beginProcessing(file.type, file.name, "custom", file.scenarioId)}
-                  className="flex-1 flex items-center justify-center gap-1 rounded py-1.5 text-[11px] font-bold text-white shadow-sm hover:scale-105 transition-transform"
-                  style={{ backgroundColor: file.type === "pcap" ? "#EC4899" : "var(--color-accent)" }}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded py-1.5 text-[11px] font-bold text-slate-950 shadow-sm hover:opacity-90 transition-all hover:scale-105"
+                  style={{ backgroundColor: file.type === "pcap" ? "#F472B6" : "var(--color-accent)" }}
                 >
-                  <Zap size={11} />
-                  <span>Test Ingest</span>
+                  <Zap size={12} />
+                  <span>Launch Forecast</span>
                 </button>
               </div>
             </div>
@@ -353,61 +447,57 @@ export function UploadPage() {
         </div>
       </div>
 
-      {/* Pre-Loaded Realistic Scenarios */}
+      {/* SOVEREIGN AIR-GAP & NTRO PS-153 COMPLIANCE SPECIFICATION CARD */}
       <div className="rounded-xl border p-5 glow-box" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-panel)" }}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-sm font-semibold text-[var(--color-text-primary)]">
-              Pre-Loaded Offline Attack Scenarios (1-Click Replay)
-            </h2>
-            <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-              Curated multi-stage telemetry sessions verified against ground-truth labels.
-            </p>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3 mb-4" style={{ borderColor: "var(--color-border)" }}>
+          <div className="flex items-center gap-2">
+            <Shield size={18} className="text-emerald-400" />
+            <div>
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                NTRO PS-153 SOVEREIGN ARCHITECTURE &amp; AIR-GAP GUARANTEE
+              </h3>
+              <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                Causal State-Transition Modeling P(S_&#123;t+1&#125; | S_t) · 100% Local Inference · Zero Cloud Dependency
+              </p>
+            </div>
           </div>
-          <span className="font-mono text-xs text-[var(--color-normal)] bg-[var(--color-normal)]/10 px-2.5 py-1 rounded border border-[var(--color-normal)]/30">
-            OFFLINE READY (C4)
+          <span className="font-mono text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/30">
+            AIR-GAP VERIFIED
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {sessions.map((s) => (
-            <div
-              key={s.id}
-              onClick={() => beginProcessing("csv", s.name, "cic-ids-2018", s.id)}
-              className="group cursor-pointer rounded-lg border p-4 transition-all hover:border-[var(--color-accent)] bg-[var(--color-base)] flex flex-col justify-between"
-              style={{ borderColor: "var(--color-border)" }}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span
-                    className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-bold ${
-                      s.severity === "critical"
-                        ? "bg-[var(--color-critical)]/20 text-[var(--color-critical)]"
-                        : s.severity === "elevated"
-                        ? "bg-[var(--color-elevated)]/20 text-[var(--color-elevated)]"
-                        : "bg-[var(--color-normal)]/20 text-[var(--color-normal)]"
-                    }`}
-                  >
-                    {s.severity.toUpperCase()}
-                  </span>
-                  <span className="font-mono text-[11px] text-[var(--color-text-muted)]">
-                    {s.host_ip}
-                  </span>
-                </div>
-                <h4 className="text-xs font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] mb-1">
-                  {s.name}
-                </h4>
-                <p className="text-[11px] text-[var(--color-text-secondary)] line-clamp-2">
-                  {s.scenario}
-                </p>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between pt-2 border-t font-mono text-[11px] text-[var(--color-accent)]" style={{ borderColor: "var(--color-border)" }}>
-                <span>Launch Forecast</span>
-                <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
-              </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
+          <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+            <div className="text-[var(--color-text-muted)] text-[10px] flex items-center gap-1.5 mb-1">
+              <Database size={12} className="text-cyan-400" /> STATE REPRESENTATION
             </div>
-          ))}
+            <div className="font-bold text-[var(--color-text-primary)]">Canonical 84-Dim Vector</div>
+            <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">77 NetFlow + 7 Packet Micro-Stats</div>
+          </div>
+
+          <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+            <div className="text-[var(--color-text-muted)] text-[10px] flex items-center gap-1.5 mb-1">
+              <Cpu size={12} className="text-purple-400" /> NEURAL WORLD MODEL
+            </div>
+            <div className="font-bold text-[var(--color-text-primary)]">Attention-Augmented GRU</div>
+            <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">21.52M Parameters (Grand Omni)</div>
+          </div>
+
+          <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+            <div className="text-[var(--color-text-muted)] text-[10px] flex items-center gap-1.5 mb-1">
+              <Radio size={12} className="text-emerald-400" /> FORWARD SIMULATION
+            </div>
+            <div className="font-bold text-emerald-400">K=5 Latent Horizon (+50s)</div>
+            <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">Autoregressive Rollout &lt;15ms</div>
+          </div>
+
+          <div className="p-3 rounded-lg border bg-[var(--color-base)]" style={{ borderColor: "var(--color-border)" }}>
+            <div className="text-[var(--color-text-muted)] text-[10px] flex items-center gap-1.5 mb-1">
+              <Lock size={12} className="text-amber-400" /> AIR-GAP COMPLIANCE
+            </div>
+            <div className="font-bold text-amber-400">0 Cloud Egress (C4 Locked)</div>
+            <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">Operates Fully Offline in Defense Enclaves</div>
+          </div>
         </div>
       </div>
     </div>
